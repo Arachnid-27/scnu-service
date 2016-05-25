@@ -31,15 +31,14 @@ def login():
         if 'LIBCOOKIE' in request.cookies and rdb.exists('lib:' + request.cookies['LIBCOOKIE']):
             return redirect(url_for('.index'))
         return render_template('login.html', entry='图书馆')
-    else:
-        username = request.form['username']
-        password = request.form['password']
-        msg, cookie = function.login_in(username, password)
-        if not cookie:
-            return render_template('login.html', entry='图书馆', msg=msg)
-        resp = make_response(redirect(url_for('.index')))
-        resp.set_cookie('LIBCOOKIE', cookie)
-        return resp
+    username = request.form['username']
+    password = request.form['password']
+    msg, cookie = function.login(username, password)
+    if not cookie:
+        return render_template('login.html', entry='图书馆', msg=msg)
+    resp = make_response(redirect(url_for('.index')))
+    resp.set_cookie('LIBCOOKIE', cookie)
+    return resp
 
 
 @library.route('/logout')

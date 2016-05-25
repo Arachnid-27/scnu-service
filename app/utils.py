@@ -7,3 +7,10 @@ def hmget_decode(rdb, name, keys):
         else:
             results.append(value)
     return results
+
+
+def hget_decode(rdb, name, key):
+    value = rdb.hget(name, key)
+    if value:
+        value = value.decode('utf-8')
+    return value

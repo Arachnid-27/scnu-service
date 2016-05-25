@@ -1,76 +1,77 @@
 {% extends "layout.html" %}
 {% block style %}
     body {
-        padding-top: 50px;
-    }
-    .align-top {
-        padding-top: 40px;
+        padding-top: 90px;
     }
 {% endblock %}
 {% block body %}
-    <div class="container align-top">
-        <div class="row">
-            <!-- 左侧课程导航栏 -->
-            <div class="col-md-3">
-                <ul class="nav nav-pills nav-stacked">
-                {% for course in entries.courses: %}
-                    <li><a href="{{ url_for('scholat_course', tag=course.tag) }}">{{ course.title }}</a></li>
-                {% else %}
-                    <li class="active"><a>未加入课程</a></li>
-                {% endfor %}
-                </ul> 
-            </div>
-            <!-- 右侧课程信息栏-->
-            <div class="col-md-9">
-            {% if entries.info %}
-                <h1>{{ entries.info.title }}
-                    <small id="course_teacher" style="padding-left: 20px;">{{ entries.info.teacher }}</small>
-                </h1>
-            {% else %}
-                <h1>未选择课程</h1>
-            {% endif %}
-                <hr />
-                <!-- 作业信息 -->
-                <table class="table table-striped"> 
-                    <thead>
-                        <tr>
-                            <th>作业标题</th>
-                            <th>截止时间</th>
-                            <th>提交时间</th>
-                            <th>作业状态</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {% for item in entries.homework: %}
-                        <tr> 
-                            <th>{{ item.title }}</th>
-                            <th>{{ item.deadline }}</th>
-                            <th>{{ item.handin }}</th>
-                            <th>{{ item.status }}</th>
- <!--                           {% if item.href %}
-                                <th>
-                                    <button type="button" class="btn btn-default btn-xs"
-                                            onclick="window.open('{{ item.href }}')">
-                                        <span class="glyphicon glyphicon-download-alt"></span>下载
-                                    </button>
-                                </th>
-                            {% else %}  -->
-                                <th>-</th>
-                        <!--    {% endif %} -->
-                        </tr>
+<div class="container">
+    <div class="row">
+        <!-- 左侧课程导航栏 -->
+        <div class="col-md-3">
+            <ul class="nav nav-pills nav-stacked">
+                {% for item in courses: %}
+                    {% if item.title == title %}
+                    <li class="active"><a href="{{ url_for('scholat.course', cid=item.cid) }}">{{ item.title }}</a></li>
                     {% else %}
-                        <tr>
-                            <th>-</th>
-                            <th>-</th>
-                            <th>-</th>
-                            <th>-</th>
-                            <th>-</th>
-                        </tr>
+                    <li><a href="{{ url_for('scholat.course', cid=item.cid) }}">{{ item.title }}</a></li>
+                    {% endif %}
+                {% else %}
+                <li class="active"><a>未加入课程</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+        <!-- 右侧课程信息栏-->
+        <div class="col-md-9">
+            {% if title %}
+            <h1>{{ title }}
+            <!--  <small id="course_teacher" style="padding-left: 20px;"></small>  -->
+            </h1>
+            {% else %}
+            <h1>未选择课程</h1>
+            {% endif %}
+            <hr />
+            <!-- 作业信息 -->
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>作业标题</th>
+                        <th>截止时间</th>
+                        <th>提交时间</th>
+                        <th>作业状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in homework: %}
+                    <tr>
+                        <th>{{ item.title }}</th>
+                        <th>{{ item.deadline }}</th>
+                        <th>{{ item.handin }}</th>
+                        <th>{{ item.status }}</th>
+<!--                           {% if item.href %}
+                            <th>
+                                <button type="button" class="btn btn-default btn-xs"
+                                        onclick="window.open('{{ item.href }}')">
+                                    <span class="glyphicon glyphicon-download-alt"></span>下载
+                                </button>
+                            </th>
+                        {% else %}  -->
+                        <th>-</th>
+                    <!--    {% endif %} -->
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <th>-</th>
+                        <th>-</th>
+                        <th>-</th>
+                        <th>-</th>
+                        <th>-</th>
+                    </tr>
                     {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                </tbody>
+            </table>
         </div>
     </div>
+</div>
 {% endblock %}

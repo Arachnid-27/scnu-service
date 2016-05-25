@@ -11,7 +11,7 @@ headers = {
 }
 
 
-def login_in(username, password):
+def login(username, password):
     url = base_url + 'check_login.action'
     form = {
         'name': username,
