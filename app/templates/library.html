@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block style %}
+body {
+    padding-top: 90px;
+}
+{% endblock %}
+{% block body %}
+<div class="container">
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h3 class="panel-title">个人信息</h3>
+        </div>
+        <div class="panel-body">
+            <p>读者姓名 {{ info.name }}</p>
+            <p>读者号码 {{ info.identifier }}</p>
+            <p>读者类型 {{ info.type }}</p>
+            <p>工作单位 {{ info.unit }}</p>
+        </div>
+    </div>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>题名</th>
+                <th>责任者</th>
+                <th>借阅日期</th>
+                <th>应还日期</th>
+                <th>藏馆地</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for book in books %}
+            <tr>
+                <td>{{ book.title }}</td>
+                <td>{{ book.author }}</td>
+                <td>{{ book.borrow }}</td>
+                <td>{{ book.return }}</td>
+                <td>{{ book.place }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

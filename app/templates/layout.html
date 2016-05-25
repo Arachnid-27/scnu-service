@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+        <title>SCNU Service</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+        <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+        <style type="text/css">
+            {% block style %}{% endblock %}
+        </style>
+    </head>
+    <body>
+        <!-- 顶部导航栏 -->
+        <nav class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="">SCNU Service</a>
+                </div>
+                <ul class="nav navbar-nav">
+                    <li><a href="{{ url_for('main.index') }}">首页</a></li>
+                    <li><a href="#">学者网</a></li>
+                    <li><a href="{{ url_for('library.index') }}">图书馆</a></li>
+                    <li><a href="{{ url_for('jwc.index') }}">教务系统</a></li>
+                </ul>
+            </div>
+        </nav>
+        {% block body %}{% endblock %}
+    </body>
+</html>

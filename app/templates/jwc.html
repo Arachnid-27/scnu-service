@@ -1,0 +1,152 @@
+{% extends "layout.html" %}
+{% block style %}
+body {
+    padding-top: 50px;
+}
+.align-top {
+    padding-top: 40px;
+}
+.alert-hidden {
+    display: none;
+}
+{% endblock %}
+{% block body %}
+<div id="success-alert" class="alert alert-success alert-hidden">获取成功！</div>
+<div id="fail-alert" class="alert alert-danger alert-hidden">获取失败！</div>
+<div class="container align-top">
+    <!-- 内容导航条 -->
+    <ul class="nav nav-tabs">
+        <li><a href="#schedule" data-toggle="tab">课表查询</a></li>
+        <li><a href="#score" data-toggle="tab">成绩查询</a></li>
+    </ul>
+    <div class="tab-content">
+        <!-- 课表信息标签 -->
+        <div class="tab-pane fade" id="schedule">
+            <!-- 学年学期选择框 -->
+            <div style="padding-top: 10px; width: 100%">
+                <div class="input-group">
+                    <span class="input-group-addon">学年</span>
+                    <select id="year-schedule" class="form-control">
+                    {% for year in years %}
+                        {% if year == selected_year %}
+                        <option value="{{ year }}" selected="selected">{{ year }}</option>
+                        {% else %}
+                        <option value="{{ year }}">{{ year }}</option>
+                        {% endif %}
+                    {% endfor %}
+                    </select>
+                    <span class="input-group-addon">学期</span>
+                    <select id="term-schedule" class="form-control">
+                    {% for term in terms %}
+                        {% if term == selected_term %}
+                        <option value="{{ term }}" selected="selected">{{ term }}</option>
+                        {% else %}
+                        <option value="{{ term }}">{{ term }}</option>
+                        {% endif %}
+                    {% endfor %}
+                    </select>
+                    <div class="input-group-btn">
+                        <button id="btn-schedule" class="btn btn-default" type="button">Go</button>
+                    </div>
+                </div>
+            </div>
+            <!-- 课表内容 -->
+            <div id="content-schedule" style="padding-top: 10px; width: 100%">
+                {{ table|safe }}
+            </div>
+        </div>
+        <!-- 成绩信息标签 -->
+        <div class="tab-pane fade" id="score">
+            <!-- 学年学期选择框 -->
+            <div style="padding-top: 10px; width: 100%">
+                <div class="input-group">
+                    <span class="input-group-addon">学年</span>
+                    <select id="year-score" class="form-control">
+                        {% for year in years %}
+                        <option value="{{ year }}">{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                    <span class="input-group-addon">学期</span>
+                    <select id="term-score" class="form-control">
+                        {% for term in terms %}
+                        <option value="{{ term }}">{{ term }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="input-group-btn">
+                        <button id="btn-score" class="btn btn-default" type="button">Go</button>
+                    </div>
+                </div>
+            </div>
+            <!-- 成绩内容 -->
+            <div style="padding-top: 10px; width: 100%">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>课程名称</th>
+                            <th>学分</th>
+                            <th>绩点</th>
+                            <th>平时成绩</th>
+                            <th>期末成绩</th>
+                            <th>总成绩</th>
+                        </tr>
+                    </thead>
+                    <tbody id="content-score">
+                    </tbody>
+                </table>
+            </div>
+            <!-- 成绩统计 -->
+            <div style="padding-top: 10px; width: 50%">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">成绩统计</h3>
+                    </div>
+                    <div id="statistics-score" class="panel-body">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var selected_year = "{{ selected_year }}";
+    var selected_term = "{{ selected_term }}";
+    $(document).ready(function() {
+        // 加载课程表
+        $("#btn-schedule").click(function() {
+            var year = $("#year-schedule").val();
+            var term = $("#term-schedule").val();
+            if (selected_year !=  year || selected_term != term) {
+                $.post("{{ url_for('jwc.schedule') }}",
+                {
+                    'year': year,
+                    'term': term
+                },
+                function(data, status) {
+                    $("#content-schedule").html(data);
+                    $("#success-alert").fadeIn();
+                });
+                setTimeout('$("#success-alert").fadeOut()', 1800);
+                selected_year = year;
+                selected_term = term;
+            }
+
+        });
+        // 加载成绩
+        $("#btn-score").click(function() {
+            $.post("{{ url_for('jwc.score') }}",
+            {
+                'year': $("#year-score").val(),
+                'term': $("#term-score").val()
+            },
+            function(data, status) {
+                $("#content-score").html(data.body);
+                $("#statistics-score").html(data.statistics);
+                $("#success-alert").fadeIn();
+            },
+            "json");
+            setTimeout('$("#success-alert").fadeOut()', 1800);
+        });
+    })
+</script>
+{% endblock %}
+
