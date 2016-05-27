@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, g, make_response
+from flask import render_template, request, redirect, url_for, g, make_response, abort
 from .. import rdb
 from ..utils import hget_decode
 from . import scholat, function
@@ -16,15 +16,30 @@ def before_request():
 
 @scholat.route('/')
 def index():
-    courses = function.get_list(g.cookie)
-    return render_template('scholat.html', courses=courses)
+    courses = hget_decode(rdb, g.name, 'courses')
+    if not courses:
+        courses = function.get_list(g.cookie)
+    else:
+        courses = json.loads(courses)
+    return render_template('scholat.html', courses=courses, info=None)
 
 
-@scholat.route('/course/<cid>')
-def course(cid):
-    courses = json.loads(hget_decode(rdb, g.name, 'courses'))
-    homework, title = function.get_homework(g.cookie, cid)
-    return render_template('scholat.html', courses=courses, homework=homework, title=title)
+@scholat.route('/course/<int:cid>')
+@scholat.route('/course/<int:cid>/<int:cur>')
+def course(cid, cur=1):
+    courses = hget_decode(rdb, g.name, 'courses')
+    if not courses:
+        courses = function.get_list(g.cookie)
+    else:
+        courses = json.loads(courses)
+    homework, title, page = function.get_homework(g.cookie, cid, cur)
+    info = {
+        'title': title,
+        'page': page,
+        'cid': cid,
+        'cur': cur
+    }
+    return render_template('scholat.html', courses=courses, homework=homework, info=info)
 
 
 @scholat.route('/login', methods=['GET', 'POST'])
@@ -46,3 +61,21 @@ def login():
 @scholat.route('/logout')
 def logout():
     pass
+
+
+@scholat.route('/download')
+def download():
+    hid = request.args.get('hid', None)
+    cid = request.args.get('cid', None)
+    sid = request.args.get('sid', None)
+    if None in (hid, cid, sid):
+        abort(404)
+    content, hdr = function.download_homework(g.cookie, cid, sid, hid)
+    if not content:
+        abort(404)
+    resp = make_response(content)
+    resp.headers['Content-Disposition'] = hdr['Content-Disposition']
+    resp.headers['Content-Type'] = hdr['Content-Type']
+    resp.headers['Connection'] = 'Keep-Alive'
+    return resp
+

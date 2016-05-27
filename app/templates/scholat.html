@@ -10,11 +10,15 @@
         <!-- 左侧课程导航栏 -->
         <div class="col-md-3">
             <ul class="nav nav-pills nav-stacked">
-                {% for item in courses: %}
-                    {% if item.title == title %}
-                    <li class="active"><a href="{{ url_for('scholat.course', cid=item.cid) }}">{{ item.title }}</a></li>
+                {% for item in courses %}
+                    {% if info.cid and item.cid == info.cid %}
+                    <li class="active">
+                        <a href="{{ url_for('.course', cid=item.cid) }}">{{ item.title }}</a>
+                    </li>
                     {% else %}
-                    <li><a href="{{ url_for('scholat.course', cid=item.cid) }}">{{ item.title }}</a></li>
+                    <li>
+                        <a href="{{ url_for('.course', cid=item.cid) }}">{{ item.title }}</a>
+                    </li>
                     {% endif %}
                 {% else %}
                 <li class="active"><a>未加入课程</a></li>
@@ -23,10 +27,8 @@
         </div>
         <!-- 右侧课程信息栏-->
         <div class="col-md-9">
-            {% if title %}
-            <h1>{{ title }}
-            <!--  <small id="course_teacher" style="padding-left: 20px;"></small>  -->
-            </h1>
+            {% if info.title %}
+            <h1>{{ info.title }}<!--  <small id="course_teacher" style="padding-left: 20px;"></small>  --></h1>
             {% else %}
             <h1>未选择课程</h1>
             {% endif %}
@@ -43,22 +45,22 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in homework: %}
+                    {% for item in homework %}
                     <tr>
-                        <th>{{ item.title }}</th>
+                        <th>{{ item.title | ellipsis }}</th>
                         <th>{{ item.deadline }}</th>
                         <th>{{ item.handin }}</th>
                         <th>{{ item.status }}</th>
-<!--                           {% if item.href %}
-                            <th>
-                                <button type="button" class="btn btn-default btn-xs"
-                                        onclick="window.open('{{ item.href }}')">
-                                    <span class="glyphicon glyphicon-download-alt"></span>下载
-                                </button>
-                            </th>
-                        {% else %}  -->
+                        {% if item.sid %}
+                        <th>
+                            <button type="button" class="btn btn-default btn-xs"
+                                    onclick="location.href='{{ url_for('.download', cid=info.cid, sid=item.sid, hid=item.hid) }}'">
+                                <span class="glyphicon glyphicon-download-alt"></span>下载
+                            </button>
+                        </th>
+                        {% else %}
                         <th>-</th>
-                    <!--    {% endif %} -->
+                        {% endif %}
                     </tr>
                     {% else %}
                     <tr>
@@ -71,6 +73,41 @@
                     {% endfor %}
                 </tbody>
             </table>
+            {% if info.page %}
+            <div style="text-align: center;">
+                <nav>
+                    <ul class="pagination">
+                        {% if info.cur == 1 %}
+                        <li class="disabled"><a><span>&laquo;</span></a></li>
+                        {% else %}
+                        <li>
+                            <a href="{{ url_for('.course', cid=info.cid, cur=info.cur-1) }}">
+                                <span>&laquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% for index in range(1, info.page + 1) %}
+                            {% if index == info.cur %}
+                                <li class="active"><a>{{ index }}</a></li>
+                            {% else %}
+                                <li>
+                                    <a href="{{ url_for('.course', cid=info.cid, cur=index) }}">{{ index }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        {% if info.cur == info.page %}
+                        <li class="disabled"><a><span>&raquo;</span></a></li>
+                        {% else %}
+                        <li>
+                            <a href="{{ url_for('.course', cid=info.cid, cur=info.cur+1) }}">
+                                <span>&raquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
