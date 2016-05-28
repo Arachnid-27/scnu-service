@@ -124,6 +124,7 @@ body {
         </div>
     </div>
 </div>
+{% if info.sid %}
 <!-- 作业详情模态框 -->
 <div class="modal fade" id="homework-details" tabindex="-1">
     <div class="modal-dialog modal-lg" >
@@ -154,7 +155,7 @@ body {
                     <input id="upload-hid" name="hid" type="hidden">
                     <input id="upload-file" name="file" type="file" style="display:none">
                     <div class="input-group">
-                        <input type="text" class="form-control" id="select-filename">
+                        <input type="text" class="form-control" id="select-filename" readonly>
                         <span class="input-group-btn">
                             <a class="btn btn-default" onclick="$('#upload-file').click()">浏览</a>
                         </span>
@@ -217,4 +218,5 @@ function details(cid, hid) {
     'json');
 }
 </script>
+{% endif %}
 {% endblock %}

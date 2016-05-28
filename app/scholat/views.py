@@ -103,7 +103,6 @@ def details():
 def attach():
     cid = request.args.get('cid', None)
     lid = request.args.get('lid', None)
-    print(cid, lid)
     if None in (cid, lid):
         abort(404)
     content, hdr = function.download_attach(g.cookie, cid, lid)

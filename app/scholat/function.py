@@ -62,7 +62,8 @@ def get_homework(cookie, cid, cur=1):
             'hid': int(rs.group(1))
         })
     title = bs.select('.head-title')[0].get_text()
-    sid = int(bs.find(id='studentId').get('value'))
+    rs = bs.find(id='studentId')
+    sid = int(rs.get('value')) if rs else None
     return homework, title, int(page), sid
 
 
@@ -109,8 +110,9 @@ def download_url(cookies, url):
     resp = requests.get(url, headers=headers, cookies=cookies)
     if 'Content-Disposition' not in resp.headers:
         return None, None
+    disposition = resp.headers['Content-Disposition'].encode('iso-8859-1').decode('gbk')
     return resp.content, {
-        'Content-Disposition': resp.headers['Content-Disposition'],
+        'Content-Disposition': urllib.parse.quote(disposition, safe='/=;'),
         'Content-Type': resp.headers['Content-Type']
     }
 
