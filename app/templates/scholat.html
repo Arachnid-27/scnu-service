@@ -1,11 +1,19 @@
 {% extends "layout.html" %}
 {% block style %}
-    body {
-        padding-top: 90px;
-    }
+body {
+    padding-top: 50px;
+}
+.alert-hidden {
+    display: none;
+}
+{% endblock %}
+{% block script %}
+<script src="{{ url_for('static', filename='js/jquery.form.min.js') }}"></script>
 {% endblock %}
 {% block body %}
-<div class="container">
+<div id="success-alert" class="alert alert-success alert-hidden">提交成功！</div>
+<div id="fail-alert" class="alert alert-danger alert-hidden">提交失败！</div>
+<div class="container" style="padding-top: 40px;">
     <div class="row">
         <!-- 左侧课程导航栏 -->
         <div class="col-md-3">
@@ -47,19 +55,24 @@
                 <tbody>
                     {% for item in homework %}
                     <tr>
-                        <th>{{ item.title | ellipsis }}</th>
+                        <th><a onclick="details({{ info.cid }}, {{ item.hid }})" style="cursor: pointer;">{{ item.title | ellipsis }}</a></th>
                         <th>{{ item.deadline }}</th>
                         <th>{{ item.handin }}</th>
                         <th>{{ item.status }}</th>
-                        {% if item.sid %}
+                        {% if not item.handin == '未提交' %}
                         <th>
                             <button type="button" class="btn btn-default btn-xs"
-                                    onclick="location.href='{{ url_for('.download', cid=info.cid, sid=item.sid, hid=item.hid) }}'">
-                                <span class="glyphicon glyphicon-download-alt"></span>下载
+                                    onclick="location.href='{{ url_for('.homework', cid=info.cid, sid=info.sid, hid=item.hid) }}'">
+                                <span class="glyphicon glyphicon-cloud-download"></span>下载
                             </button>
                         </th>
                         {% else %}
-                        <th>-</th>
+                        <th>
+                            <button type="button" class="btn btn-default btn-xs" data-toggle="modal"
+                                    onclick="upload({{ item.hid }})">
+                                <span class="glyphicon glyphicon-cloud-upload"></span>提交
+                            </button>
+                        </th>
                         {% endif %}
                     </tr>
                     {% else %}
@@ -111,4 +124,97 @@
         </div>
     </div>
 </div>
+<!-- 作业详情模态框 -->
+<div class="modal fade" id="homework-details" tabindex="-1">
+    <div class="modal-dialog modal-lg" >
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+                <h4>作业详情</h4>
+            </div>
+            <div id="details-body" class="modal-body">
+            </div>
+            <div id="details-footer" class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 作业上传模态框 -->
+<div class="modal fade" id="homework-upload" tabindex="-1">
+    <div class="modal-dialog" >
+        <div class="modal-content">
+            <form id="upload-form" action="{{ url_for('.upload') }}" method="post" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+                    <h4>作业上传</h4>
+                </div>
+                <div class="modal-body">
+                    <input name="cid" type="hidden" value="{{ info.cid }}">
+                    <input name="sid" type="hidden" value="{{ info.sid }}">
+                    <input id="upload-hid" name="hid" type="hidden">
+                    <input id="upload-file" name="file" type="file" style="display:none">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="select-filename">
+                        <span class="input-group-btn">
+                            <a class="btn btn-default" onclick="$('#upload-file').click()">浏览</a>
+                        </span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">上传文件</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+$(document).ready(function() {
+    // 监听浏览按钮
+    $('#upload-file').change(function() {
+        var path = $(this).val();
+        var arr = path.split("\\");
+        $('#select-filename').val(arr.pop());
+    });
+
+    // 异步上传表单
+    $('#upload-form').ajaxForm({
+        success: function(data) {
+            $('#homework-upload').modal('hide');
+            if (data == 'success') {
+                $('#success-alert').fadeIn();
+                setTimeout('$("#success-alert").fadeOut()', 1800);
+            } else {
+                $('#fail-alert').fadeIn();
+                setTimeout('$("#fail-alert").fadeOut()', 1800);
+            }
+        }
+    });
+});
+
+// 显示上传模态框
+function upload(hid) {
+    $('#upload-hid').val(hid);
+    $('#homework-upload').modal({
+        backdrop: 'static',
+        keyboard: false
+    });
+}
+
+// 显示作业详情
+function details(cid, hid) {
+    $.get('{{ url_for('.details') }}',
+    {
+        'cid': cid,
+        'hid': hid
+    },
+    function(data, status) {
+        $('#details-body').html(data.content);
+        if (data.footer) {
+            $('#details-footer').html(data.footer);
+        }
+        $('#homework-details').modal('show');
+    },
+    'json');
+}
+</script>
 {% endblock %}

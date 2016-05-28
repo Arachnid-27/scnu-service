@@ -32,14 +32,15 @@ def course(cid, cur=1):
         courses = function.get_list(g.cookie)
     else:
         courses = json.loads(courses)
-    homework, title, page = function.get_homework(g.cookie, cid, cur)
+    items, title, page, sid = function.get_homework(g.cookie, cid, cur)
     info = {
         'title': title,
         'page': page,
         'cid': cid,
+        'sid': sid,
         'cur': cur
     }
-    return render_template('scholat.html', courses=courses, homework=homework, info=info)
+    return render_template('scholat.html', courses=courses, homework=items, info=info)
 
 
 @scholat.route('/login', methods=['GET', 'POST'])
@@ -63,12 +64,12 @@ def logout():
     pass
 
 
-@scholat.route('/download')
-def download():
-    hid = request.args.get('hid', None)
+@scholat.route('/homework')
+def homework():
     cid = request.args.get('cid', None)
     sid = request.args.get('sid', None)
-    if None in (hid, cid, sid):
+    hid = request.args.get('hid', None)
+    if None in (cid, sid, hid):
         abort(404)
     content, hdr = function.download_homework(g.cookie, cid, sid, hid)
     if not content:
@@ -79,3 +80,47 @@ def download():
     resp.headers['Connection'] = 'Keep-Alive'
     return resp
 
+
+@scholat.route('/details')
+def details():
+    cid = request.args.get('cid', None)
+    hid = request.args.get('hid', None)
+    if None in (cid, hid):
+        abort(404)
+    content, items = function.get_details(g.cookie, cid, hid)
+    if not content:
+        abort(404)
+    footer = ''
+    for item in items:
+        footer += '<p><a href="{}">{}</a></p>'.format(url_for('.attach', cid=cid, lid=item['lid']), item['title'])
+    return json.dumps({
+        'content': content,
+        'footer': footer
+    })
+
+
+@scholat.route('/attach')
+def attach():
+    cid = request.args.get('cid', None)
+    lid = request.args.get('lid', None)
+    print(cid, lid)
+    if None in (cid, lid):
+        abort(404)
+    content, hdr = function.download_attach(g.cookie, cid, lid)
+    if not content:
+        abort(404)
+    resp = make_response(content)
+    resp.headers['Content-Disposition'] = hdr['Content-Disposition']
+    resp.headers['Content-Type'] = hdr['Content-Type']
+    resp.headers['Connection'] = 'Keep-Alive'
+    return resp
+
+
+@scholat.route('/upload', methods=['POST'])
+def upload():
+    file = request.files['file']
+    cid = request.form['cid']
+    sid = request.form['sid']
+    hid = request.form['hid']
+    rs = function.upload_homework(g.cookie, cid, sid, hid, file.stream, file.filename)
+    return 'success' if rs else 'failed'

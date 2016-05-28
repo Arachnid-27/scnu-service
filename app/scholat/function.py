@@ -3,6 +3,7 @@ from .. import rdb
 import requests
 import re
 import json
+import urllib.parse
 
 host = 'http://www.scholat.com'
 
@@ -51,31 +52,65 @@ def get_homework(cookie, cid, cur=1):
     if temp:
         page = re.search(r'\d+', temp[0].get_text()).group(0)
     for item in bs.select('.altrow'):
-        info = item.select('td:nth-of-type(6) > a')
-        rs = re.search(r'homeworkId=(\d+)', info[0].get('href'))
-        hid = None if not rs else int(rs.group(1))
-        rs = re.search(r'studentId=(\d+)', info[1].get('href'))
-        sid = None if not rs else int(rs.group(1))
+        tag = item.select('td:nth-of-type(1) > a')[0]
+        rs = re.search(r'homeworkId=(\d+)', tag.get('href'))
         homework.append({
-            'title': item.select('td:nth-of-type(1) > a')[0].get('title').strip(),
+            'title': tag.get('title').strip(),
             'deadline': item.select('td:nth-of-type(3)')[0].get_text().strip(),
             'handin': item.select('td:nth-of-type(4)')[0].get_text().strip(),
             'status': item.select('td:nth-of-type(5)')[0].get_text().strip(),
-            'hid': hid,
-            'sid': sid
+            'hid': int(rs.group(1))
         })
     title = bs.select('.head-title')[0].get_text()
-    return homework, title, int(page)
+    sid = int(bs.find(id='studentId').get('value'))
+    return homework, title, int(page), sid
 
 
 def download_homework(cookie, cid, sid, hid):
     url = host + '/course/S_downloadStudentHomework.html?courseId={}&studentId={}&homeworkId={}'.format(cid, sid, hid)
+    return download_url({'JSESSIONID': cookie}, url)
+
+
+def get_details(cookie, cid, hid):
+    url = host + '/course/S_oneHomework.html?courseId={}&homeworkId={}'.format(cid, hid)
     resp = requests.get(url, headers=headers, cookies={'JSESSIONID': cookie})
+    bs = BeautifulSoup(resp.text, 'lxml')
+    content = bs.select('.notice_content')[0].prettify()
+    titles = bs.select('.cont > div > p > span')
+    links = bs.select('.cont > div > a')
+    attach = []
+    for title, link in zip(titles, links):
+        attach.append({
+            'title': title.get('title'),
+            'lid': re.search(r'homeworkLinkId=(\d+)', link.get('href')).group(1)
+        })
+    return content, attach
+
+
+def download_attach(cookie, cid, lid):
+    url = host + '/course/S_downloadHomeworkLink.html?courseId={}&homeworkLinkId={}'.format(cid, lid)
+    return download_url({'JSESSIONID': cookie}, url)
+
+
+def upload_homework(cookie, cid, sid, hid, file, filename):
+    url = host + '/course/S_uploadHomework.html?studentId={}&courseId={}&homeworkId={}'.format(sid, cid, hid)
+    files = {
+        'Filename': (None, filename),
+        'file': (urllib.parse.quote(filename), file, 'application/octet-stream'),
+        'Upload': (None, 'Submit Query')
+    }
+    resp = requests.post(url, headers=headers, files=files, cookies={'JSESSIONID': cookie})
+    if 'homework' in resp.text:
+        return True
+    return False
+
+
+def download_url(cookies, url):
+    resp = requests.get(url, headers=headers, cookies=cookies)
     if 'Content-Disposition' not in resp.headers:
         return None, None
     return resp.content, {
         'Content-Disposition': resp.headers['Content-Disposition'],
         'Content-Type': resp.headers['Content-Type']
     }
-
 

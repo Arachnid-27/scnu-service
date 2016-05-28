@@ -6,6 +6,7 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
         <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+        {% block script %}{% endblock %}
         <style type="text/css">
             {% block style %}{% endblock %}
         </style>
