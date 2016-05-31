@@ -55,8 +55,7 @@ score_view = 'dDw2NDI3MTcwOTk7dDxwPGw8U29ydEV4cHJlcztzZmRjYms7ZGczO2R5YnlzY2o7U2
 
 def get_code():
     url = base_url + 'CheckCode.aspx'
-    resp = requests.get(url, headers=headers, allow_redirects=False)
-    print(resp.request.headers)
+    resp = requests.get(url, headers=headers)
     cookie = resp.cookies.get('ASP.NET_SessionId')
     return resp.content, cookie
 

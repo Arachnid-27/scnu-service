@@ -8,7 +8,13 @@
         <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
         {% block script %}{% endblock %}
         <style type="text/css">
-            {% block style %}{% endblock %}
+        body {
+            padding-top: 50px;
+        }
+        .alert-hidden {
+            display: none;
+        }
+        {% block style %}{% endblock %}
         </style>
     </head>
     <body>
@@ -16,13 +22,13 @@
         <nav class="navbar navbar-inverse navbar-fixed-top">
             <div class="container">
                 <div class="navbar-header">
-                    <a class="navbar-brand" href="">SCNU Service</a>
+                    <a class="navbar-brand" style="cursor: default;">SCNU Service</a>
                 </div>
                 <ul class="nav navbar-nav">
                     <li><a href="{{ url_for('main.index') }}">首页</a></li>
                     <li><a href="{{ url_for('scholat.index') }}">学者网</a></li>
                     <li><a href="{{ url_for('library.index') }}">图书馆</a></li>
-                    <li><a href="{{ url_for('jwc.index') }}">教务系统</a></li>
+                    <li><a href="{{ url_for('score.index') }}">成绩查询</a></li>
                 </ul>
             </div>
         </nav>

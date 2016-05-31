@@ -22,4 +22,7 @@ def create_app(optional='default'):
     from .jwc import jwc as jwc_blueprint
     app.register_blueprint(jwc_blueprint, url_prefix='/jwc')
 
+    from .score import score as score_blueprint
+    app.register_blueprint(score_blueprint, url_prefix='/score')
+
     return app

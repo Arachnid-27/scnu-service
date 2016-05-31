@@ -1,20 +1,17 @@
 {% extends "layout.html" %}
-{% block style %}
-body {
-    padding-top: 90px;
-}
-{% endblock %}
 {% block body %}
-<div class="container">
+<div id="success-alert" class="alert alert-success alert-hidden"><strong>续借成功！</strong></div>
+<div id="fail-alert" class="alert alert-danger alert-hidden"></div>
+<div class="container" style="padding-top: 40px">
     <div class="panel panel-primary">
         <div class="panel-heading">
             <h3 class="panel-title">个人信息</h3>
         </div>
         <div class="panel-body">
-            <p>读者姓名 {{ info.name }}</p>
-            <p>读者号码 {{ info.identifier }}</p>
-            <p>读者类型 {{ info.type }}</p>
-            <p>工作单位 {{ info.unit }}</p>
+            <p>读者姓名： {{ info.name }}</p>
+            <p>读者号码： {{ info.identifier }}</p>
+            <p>读者类型： {{ info.type }}</p>
+            <p>工作单位： {{ info.unit }}</p>
         </div>
     </div>
     <table class="table table-striped">
@@ -25,6 +22,7 @@ body {
                 <th>借阅日期</th>
                 <th>应还日期</th>
                 <th>藏馆地</th>
+                <th>操作</th>
             </tr>
         </thead>
         <tbody>
@@ -35,6 +33,12 @@ body {
                 <td>{{ book.borrow }}</td>
                 <td>{{ book.return }}</td>
                 <td>{{ book.place }}</td>
+                <td>
+                    <button type="button" class="btn btn-default btn-xs"
+                            onclick="renew('{{ book.barcode }}')">
+                        <span class="glyphicon glyphicon-send"></span> 续借
+                    </button>
+                </td>
             </tr>
             {% else %}
             <tr>
@@ -48,4 +52,23 @@ body {
         </tbody>
     </table>
 </div>
+<script>
+    function renew(barcode) {
+        $.get("{{ url_for('.renew') }}",
+        {
+            'barcode': barcode
+        },
+        function (data, status) {
+            if (data.success == true) {
+                $('#success-alert').fadeIn();
+                setTimeout("$('#success-alert').fadeOut()", 1800);
+            } else {
+                $('#fail-alert').html('<strong>续借失败！</strong>' + data.msg)
+                $('#fail-alert').fadeIn();
+                setTimeout("$('#fail-alert').fadeOut()", 1800);
+            }
+        },
+        'json');
+    }
+</script>
 {% endblock %}

@@ -3,7 +3,7 @@ from .. import rdb
 import requests
 import re
 
-base_url = 'http://202.116.41.246/m/reader/'
+base_url = 'http://202.116.41.246/m/reader'
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
@@ -12,7 +12,7 @@ headers = {
 
 
 def login(username, password):
-    url = base_url + 'check_login.action'
+    url = base_url + '/check_login.action'
     form = {
         'name': username,
         'passwd': password,
@@ -30,7 +30,7 @@ def login(username, password):
 
 
 def get_info(cookie):
-    url = base_url + 'info.action'
+    url = base_url + '/info.action'
     resp = requests.get(url, headers=headers, cookies={'JSESSIONID': cookie})
     bs = BeautifulSoup(resp.text, 'lxml')
     rs = bs.select('h6')
@@ -46,7 +46,7 @@ def get_info(cookie):
 
 def get_books(cookie):
     books = []
-    url = base_url + 'lend_list.action'
+    url = base_url + '/lend_list.action'
     resp = requests.get(url, headers=headers, cookies={'JSESSIONID': cookie})
     bs = BeautifulSoup(resp.text, 'lxml')
     items = bs.select('#lend_list > li')
@@ -58,7 +58,14 @@ def get_books(cookie):
             'borrow': item.select('a > p:nth-of-type(1)')[0].get_text().strip().split(':')[1],
             'return': item.select('a > p:nth-of-type(2)')[0].get_text().strip().split(':')[1],
             'place': item.select('a > p:nth-of-type(3)')[0].get_text().strip().split(':')[1],
-            'renew': item.select('input[onclick]')[0].get('onclick').split("'")[-2]
+            'barcode': item.select('input[onclick]')[0].get('onclick').split("'")[-2]
         })
     return books
 
+
+def renew(cookie, barcode):
+    url = base_url + '/renew.action?barcode={}'.format(barcode)
+    resp = requests.get(url, headers=headers, cookies={'JSESSIONID': cookie})
+    bs = BeautifulSoup(resp.text, 'lxml')
+    msg = bs.select('body > div > div:nth-of-type(3) > h3')[0].get_text()
+    return msg

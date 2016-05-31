@@ -1,9 +1,4 @@
 {% extends "layout.html" %}
-{% block style %}
-body {
-    padding-top: 50px;
-}
-{% endblock %}
 {% block body %}
 <!-- 错误提示 -->
 {% if msg %}
@@ -20,7 +15,7 @@ body {
             <label>密码</label>
             <input type="password" class="form-control" name="password" placeholder="输入密码">
         </div>
-        {% if entry == '教务处' %}
+        {% if entry == '校园网' %}
         <div class="form-group">
             <label>验证码</label>
             <div class="input-group">
@@ -33,7 +28,7 @@ body {
         {% endif %}
         <br />
         <button id="btn-login" class="btn btn-primary btn-block" type="submit">登录</button>
-        {% if entry == '教务处' %}
+        {% if entry == '校园网' %}
         <script>
             $(function() {
                 $("[data-toggle='popover']").popover();
@@ -42,7 +37,7 @@ body {
                 $("#btn-code").popover({
                     html : true,
                     placement : "right",
-                    content : '<img src="{{ url_for('jwc.verify') }}" />'
+                    content : '<img src="{{ url_for('score.verify') }}" />'
                 });
             })
         </script>

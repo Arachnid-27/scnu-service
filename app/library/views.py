@@ -2,6 +2,7 @@ from flask import render_template, request, redirect, url_for, g, make_response
 from .. import rdb
 from ..utils import hmget_decode
 from . import library, function
+import json
 
 
 @library.before_request
@@ -9,14 +10,13 @@ def before_request():
     if not request.endpoint == 'library.login':
         if 'LIBCOOKIE' not in request.cookies or not rdb.exists('lib:' + request.cookies['LIBCOOKIE']):
             return redirect(url_for('.login'))
-        g.name = 'lib:' + request.cookies['LIBCOOKIE']
         g.cookie = request.cookies['LIBCOOKIE']
 
 
 @library.route('/')
 def index():
     keys = ['name', 'identifier', 'type', 'unit']
-    values = hmget_decode(rdb, g.name, keys)
+    values = hmget_decode(rdb, 'lib:' + g.cookie, keys)
     if None in values:
         info = function.get_info(g.cookie)
     else:
@@ -39,6 +39,17 @@ def login():
     resp = make_response(redirect(url_for('.index')))
     resp.set_cookie('LIBCOOKIE', cookie)
     return resp
+
+
+@library.route('/renew')
+def renew():
+    barcode = request.args.get('barcode', None)
+    if not barcode:
+        return json.dumps({'success': False, 'msg': '条形码不能为空'})
+    msg = function.renew(g.cookie, barcode)
+    if not msg:
+        return json.dumps({'success': True})
+    return json.dumps({'success': False, 'msg': msg})
 
 
 @library.route('/logout')

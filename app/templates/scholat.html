@@ -1,12 +1,4 @@
 {% extends "layout.html" %}
-{% block style %}
-body {
-    padding-top: 50px;
-}
-.alert-hidden {
-    display: none;
-}
-{% endblock %}
 {% block script %}
 <script src="{{ url_for('static', filename='js/jquery.form.min.js') }}"></script>
 {% endblock %}
@@ -55,33 +47,33 @@ body {
                 <tbody>
                     {% for item in homework %}
                     <tr>
-                        <th><a onclick="details({{ info.cid }}, {{ item.hid }})" style="cursor: pointer;">{{ item.title | ellipsis }}</a></th>
-                        <th>{{ item.deadline }}</th>
-                        <th>{{ item.handin }}</th>
-                        <th>{{ item.status }}</th>
+                        <td><a onclick="details({{ info.cid }}, {{ item.hid }})" style="cursor: pointer;">{{ item.title | ellipsis }}</a></td>
+                        <td>{{ item.deadline }}</td>
+                        <td>{{ item.handin }}</td>
+                        <td>{{ item.status }}</td>
                         {% if not item.handin == '未提交' %}
-                        <th>
+                        <td>
                             <button type="button" class="btn btn-default btn-xs"
                                     onclick="location.href='{{ url_for('.homework', cid=info.cid, sid=info.sid, hid=item.hid) }}'">
-                                <span class="glyphicon glyphicon-cloud-download"></span>下载
+                                <span class="glyphicon glyphicon-cloud-download"></span> 下载
                             </button>
-                        </th>
+                        </td>
                         {% else %}
-                        <th>
+                        <td>
                             <button type="button" class="btn btn-default btn-xs" data-toggle="modal"
                                     onclick="upload({{ item.hid }})">
-                                <span class="glyphicon glyphicon-cloud-upload"></span>提交
+                                <span class="glyphicon glyphicon-cloud-upload"></span> 提交
                             </button>
-                        </th>
+                        </td>
                         {% endif %}
                     </tr>
                     {% else %}
                     <tr>
-                        <th>-</th>
-                        <th>-</th>
-                        <th>-</th>
-                        <th>-</th>
-                        <th>-</th>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
                     </tr>
                     {% endfor %}
                 </tbody>
