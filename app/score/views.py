@@ -33,11 +33,11 @@ def login():
         cookie = request.cookies.get('SCOCOOKIE')
         if not function.check(cookie, code):
             return render_template('login.html', entry='校园网', msg='验证码错误')
-        auth = function.login(cookie, username, password, code)
-        if not auth:
+        cookie = function.login(cookie, username, password, code)
+        if not cookie:
             return render_template('login.html', entry='校园网', msg='用户名或密码错误')
         resp = make_response(redirect(url_for('.index')))
-        resp.set_cookie('SCOCOOKIE', auth)
+        resp.set_cookie('SCOCOOKIE', cookie)
         return resp
 
 
@@ -69,3 +69,8 @@ def get():
         'statistics': statistics
     })
 
+
+@score.route('/logout')
+def logout():
+    rdb.delete('sco:' + g.cookie)
+    return redirect(url_for('.login'))

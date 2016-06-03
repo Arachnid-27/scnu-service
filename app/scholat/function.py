@@ -28,7 +28,6 @@ def login(username, password):
     return '登录成功', cookie
 
 
-# 获取课程列表
 def get_list(cookie):
     url = host + '/getAllCourses.html'
     resp = requests.get(url, headers=headers, cookies={'JSESSIONID': cookie})
@@ -43,6 +42,12 @@ def get_list(cookie):
 
 
 def get_homework(cookie, cid, cur=1):
+    status_map = {
+        '已截止': -1,
+        '未截止': 0,
+        '按时提交': 1,
+        '延时提交': 2
+    }
     homework = []
     url = host + '/course/S_homeworkList.html?courseId={}&cpage={}'.format(cid, cur)
     resp = requests.get(url, headers=headers, cookies={'JSESSIONID': cookie})
@@ -58,7 +63,7 @@ def get_homework(cookie, cid, cur=1):
             'title': tag.get('title').strip(),
             'deadline': item.select('td:nth-of-type(3)')[0].get_text().strip(),
             'handin': item.select('td:nth-of-type(4)')[0].get_text().strip(),
-            'status': item.select('td:nth-of-type(5)')[0].get_text().strip(),
+            'status': status_map.get(item.select('td:nth-of-type(5)')[0].get_text().strip(), -2),
             'hid': int(rs.group(1))
         })
     title = bs.select('.head-title')[0].get_text()

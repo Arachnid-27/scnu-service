@@ -4,9 +4,11 @@
         <meta http-equiv="content-type" content="text/html; charset=utf-8">
         <title>SCNU Service</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+        {% block script %}
         <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-        {% block script %}{% endblock %}
+        {% endblock %}
+        {% block style %}
         <style type="text/css">
         body {
             padding-top: 50px;
@@ -14,7 +16,11 @@
         .alert-hidden {
             display: none;
         }
-        {% block style %}{% endblock %}
+        .label-align {
+            padding-top: 3px;
+            padding-bottom: 3px;
+        }
+        {% endblock %}
         </style>
     </head>
     <body>
@@ -22,7 +28,7 @@
         <nav class="navbar navbar-inverse navbar-fixed-top">
             <div class="container">
                 <div class="navbar-header">
-                    <a class="navbar-brand" style="cursor: default;">SCNU Service</a>
+                    <a id="scnu-brand" class="navbar-brand" style="cursor: pointer;" onclick="account()">SCNU Service</a>
                 </div>
                 <ul class="nav navbar-nav">
                     <li><a href="{{ url_for('main.index') }}">首页</a></li>
@@ -33,5 +39,61 @@
             </div>
         </nav>
         {% block body %}{% endblock %}
+        <!-- 帐号管理模态框 -->
+        <div class="modal fade" id="account-modal" tabindex="-1">
+            <div class="modal-dialog" >
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+                        <h4>帐号管理</h4>
+                    </div>
+                    <div class="modal-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>帐号类型</th>
+                                    <th>帐号状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="account-body">
+                                <tr>
+                                    <td>学者网</td>
+                                    <td id="sch-status"></td>
+                                    <td id="sch-operate"></td>
+                                </tr>
+                                <tr>
+                                    <td>图书馆</td>
+                                    <td id="lib-status"></td>
+                                    <td id="lib-operate"></td>
+                                </tr>
+                                <tr>
+                                    <td>成绩查询</td>
+                                    <td id="sco-status"></td>
+                                    <td id="sco-operate"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            // 显示帐号管理
+            function account() {
+                $.get('{{ url_for('main.account') }}',
+                function(data, status) {
+                    console.log(data);
+                    $('#sch-status').html(data.sch.status);
+                    $('#sch-operate').html(data.sch.operate);
+                    $('#lib-status').html(data.lib.status);
+                    $('#lib-operate').html(data.lib.operate);
+                    $('#sco-status').html(data.sco.status);
+                    $('#sco-operate').html(data.sco.operate);
+                    $('#account-modal').modal('show');
+                },
+                'json');
+            }
+        </script>
     </body>
 </html>

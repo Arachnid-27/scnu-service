@@ -1,6 +1,4 @@
-from bs4 import BeautifulSoup
 from .. import rdb
-from ..utils import hmget_decode
 import requests
 import re
 import json
@@ -62,16 +60,13 @@ def get_score(cookie, year, term):
     url = 'http://app.scnu.edu.cn/score/term.html?academicYear={}&term={}'.format(year, term)
     resp = requests.get(url, headers=headers, cookies={'oauthCode': cookie})
     term_data = json.loads(re.search(r'term_data = (.*?);', resp.text).group(1))
-    grade = []
-    print(term_data['data']['gradeList'])
-    for item in term_data['data']['gradeList']:
-        grade.append({
-            'name': item.get('lessionName', '-'),
-            'final': item.get('finalGrade', '-'),
-            'usual': item.get('usualGrade', '-'),
-            'credit': item.get('credit', '-'),
-            'total': item.get('grade', '-')
-        })
+    grade = [{
+                 'name': item.get('lessionName', '-'),
+                 'final': item.get('finalGrade', '-'),
+                 'usual': item.get('usualGrade', '-'),
+                 'credit': item.get('credit', '-'),
+                 'total': item.get('grade', '-')
+             } for item in term_data['data']['gradeList']]
     info = {
         'all': term_data['data']['passCount'],
         'unpass': term_data['data']['unPassCount'],

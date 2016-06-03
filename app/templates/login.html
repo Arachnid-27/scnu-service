@@ -30,13 +30,10 @@
         <button id="btn-login" class="btn btn-primary btn-block" type="submit">登录</button>
         {% if entry == '校园网' %}
         <script>
-            $(function() {
-                $("[data-toggle='popover']").popover();
-            })
             $(document).ready(function() {
                 $("#btn-code").popover({
                     html : true,
-                    placement : "right",
+                    placement : 'right',
                     content : '<img src="{{ url_for('score.verify') }}" />'
                 });
             })

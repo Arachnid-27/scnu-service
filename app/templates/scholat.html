@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% block script %}
+{{ super() }}
 <script src="{{ url_for('static', filename='js/jquery.form.min.js') }}"></script>
 {% endblock %}
 {% block body %}
@@ -50,7 +51,17 @@
                         <td><a onclick="details({{ info.cid }}, {{ item.hid }})" style="cursor: pointer;">{{ item.title | ellipsis }}</a></td>
                         <td>{{ item.deadline }}</td>
                         <td>{{ item.handin }}</td>
-                        <td>{{ item.status }}</td>
+                        {% if item.status == 2 %}
+                        <td><span class="label label-info label-align">延时提交</span></td>
+                        {% elif item.status == 1 %}
+                        <td><span class="label label-success label-align">按时提交</span></td>
+                        {% elif item.status == 0 %}
+                        <td><span class="label label-warning label-align">未截止</span></td>
+                        {% elif item.status == -1 %}
+                        <td><span class="label label-danger label-align">已截止</span></td>
+                        {% else %}
+                        <td><span class="label label-default label-align">未知</span></td>
+                        {% endif %}
                         {% if not item.handin == '未提交' %}
                         <td>
                             <button type="button" class="btn btn-default btn-xs"
@@ -93,11 +104,11 @@
                         {% endif %}
                         {% for index in range(1, info.page + 1) %}
                             {% if index == info.cur %}
-                                <li class="active"><a>{{ index }}</a></li>
+                            <li class="active"><a>{{ index }}</a></li>
                             {% else %}
-                                <li>
-                                    <a href="{{ url_for('.course', cid=info.cid, cur=index) }}">{{ index }}</a>
-                                </li>
+                            <li>
+                                <a href="{{ url_for('.course', cid=info.cid, cur=index) }}">{{ index }}</a>
+                            </li>
                             {% endif %}
                         {% endfor %}
                         {% if info.cur == info.page %}
@@ -175,10 +186,11 @@ $(document).ready(function() {
             $('#homework-upload').modal('hide');
             if (data == 'success') {
                 $('#success-alert').fadeIn();
-                setTimeout('$("#success-alert").fadeOut()', 1800);
+                setTimeout("$('#success-alert').fadeOut()", 1000);
+                setTimeout('location.reload()', 1200);
             } else {
                 $('#fail-alert').fadeIn();
-                setTimeout('$("#fail-alert").fadeOut()', 1800);
+                setTimeout("$('#fail-alert').fadeOut()", 1000);
             }
         }
     });

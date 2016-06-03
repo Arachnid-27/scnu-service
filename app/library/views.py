@@ -54,5 +54,5 @@ def renew():
 
 @library.route('/logout')
 def logout():
-    rdb.delete(g.name)
+    rdb.delete('lib:' + g.cookie)
     return redirect(url_for('.login'))

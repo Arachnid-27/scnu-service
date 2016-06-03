@@ -22,9 +22,8 @@ def login(username, password):
     msg = re.search(r"msg:'(.*?)'", resp.text)
     if not msg:
         cookie = resp.cookies.get('JSESSIONID')
-        name = 'lib:' + cookie
-        rdb.hset(name, 'foo', 'foo')
-        rdb.expire(name, 3600)
+        rdb.hset('lib:' + cookie, 'foo', 'foo')
+        rdb.expire('lib:' + cookie, 3600)
         return '登录成功', cookie
     return msg.group(1), None
 

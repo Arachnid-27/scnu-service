@@ -10,13 +10,12 @@ def before_request():
     if not request.endpoint == 'scholat.login':
         if 'SCHCOOKIE' not in request.cookies or not rdb.exists('sch:' + request.cookies['SCHCOOKIE']):
             return redirect(url_for('.login'))
-        g.name = 'sch:' + request.cookies['SCHCOOKIE']
         g.cookie = request.cookies['SCHCOOKIE']
 
 
 @scholat.route('/')
 def index():
-    courses = hget_decode(rdb, g.name, 'courses')
+    courses = hget_decode(rdb, 'sch:' + g.cookie, 'courses')
     if not courses:
         courses = function.get_list(g.cookie)
     else:
@@ -27,7 +26,7 @@ def index():
 @scholat.route('/course/<int:cid>')
 @scholat.route('/course/<int:cid>/<int:cur>')
 def course(cid, cur=1):
-    courses = hget_decode(rdb, g.name, 'courses')
+    courses = hget_decode(rdb, 'sch:' + g.cookie, 'courses')
     if not courses:
         courses = function.get_list(g.cookie)
     else:
@@ -61,7 +60,8 @@ def login():
 
 @scholat.route('/logout')
 def logout():
-    pass
+    rdb.delete('sch:' + g.cookie)
+    return redirect(url_for('.login'))
 
 
 @scholat.route('/homework')
