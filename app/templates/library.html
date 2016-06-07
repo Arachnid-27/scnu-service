@@ -61,11 +61,12 @@
         function (data, status) {
             if (data.success == true) {
                 $('#success-alert').fadeIn();
-                setTimeout("$('#success-alert').fadeOut()", 1800);
+                setTimeout("$('#success-alert').fadeOut()", 1000);
+                setTimeout('location.reload()', 1200);
             } else {
                 $('#fail-alert').html('<strong>续借失败！</strong>' + data.msg)
                 $('#fail-alert').fadeIn();
-                setTimeout("$('#fail-alert').fadeOut()", 1800);
+                setTimeout("$('#fail-alert').fadeOut()", 1000);
             }
         },
         'json');

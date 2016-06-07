@@ -47,7 +47,7 @@ def renew():
     if not barcode:
         return json.dumps({'success': False, 'msg': '条形码不能为空'})
     msg = function.renew(g.cookie, barcode)
-    if not msg:
+    if '成功' in msg:
         return json.dumps({'success': True})
     return json.dumps({'success': False, 'msg': msg})
 
