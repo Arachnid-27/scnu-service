@@ -1,5 +1,6 @@
 # SCNU Service
-聚集校内常用的三个网站，使生活更加便利
+- 聚集校内常用的三个网站，便利生活
+- 开发采用 `Flask` 框架
 
 ## 功能介绍
 [学者网](http://www.scholat.com)
@@ -15,6 +16,14 @@
 [教务系统](http://jwc.scnu.edu.cn)
 - 查询个人成绩
 - 查询个人课表
+
+## 应用截图
+![image](https://github.com/Arachnid-27/scnu-service/raw/master/screenshots/index.png)
+![image](https://github.com/Arachnid-27/scnu-service/raw/master/screenshots/login.png)
+![image](https://github.com/Arachnid-27/scnu-service/raw/master/screenshots/scholat.png)
+![image](https://github.com/Arachnid-27/scnu-service/raw/master/screenshots/library.png)
+![image](https://github.com/Arachnid-27/scnu-service/raw/master/screenshots/score.png)
+![image](https://github.com/Arachnid-27/scnu-service/raw/master/screenshots/manager.png)
 
 ## 使用说明
 - 安装 `Python3`

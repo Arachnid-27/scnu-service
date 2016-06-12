@@ -34,9 +34,9 @@ def get_list(cookie):
     resp.encoding = 'utf-8'
     items = json.loads(resp.text)[0]['加入的课程']
     courses = [{
-            'title': item['title'],
-            'cid': item['id']
-    } for item in items]
+                   'title': item['title'],
+                   'cid': item['id']
+               } for item in items]
     rdb.hset('sch:' + cookie, 'courses', json.dumps(courses))
     return courses
 
@@ -52,23 +52,20 @@ def get_homework(cookie, cid, cur=1):
     url = host + '/course/S_homeworkList.html?courseId={}&cpage={}'.format(cid, cur)
     resp = requests.get(url, headers=headers, cookies={'JSESSIONID': cookie})
     bs = BeautifulSoup(resp.text, 'lxml')
-    page = 1
-    temp = bs.select('div.page')
-    if temp:
-        page = re.search(r'\d+', temp[0].get_text()).group(0)
-    for item in bs.select('.altrow'):
-        tag = item.select('td:nth-of-type(1) > a')[0]
-        rs = re.search(r'homeworkId=(\d+)', tag.get('href'))
+    rs = bs.find('div', class_='page')
+    page = 1 if not rs else int(re.search(r'\d+', rs.get_text()).group())
+    for item in bs.find_all('tr', class_='altrow'):
+        td = item.find_all('td')
         homework.append({
-            'title': tag.get('title').strip(),
-            'deadline': item.select('td:nth-of-type(3)')[0].get_text().strip(),
-            'handin': item.select('td:nth-of-type(4)')[0].get_text().strip(),
-            'status': status_map.get(item.select('td:nth-of-type(5)')[0].get_text().strip(), -2),
-            'hid': int(rs.group(1))
+            'title': td[0].find('a').get('title').strip(),
+            'deadline': td[2].get_text().strip(),
+            'handin': td[3].get_text().strip(),
+            'status': status_map.get(td[4].get_text().strip(), -2),
+            'hid': int(re.search(r'homeworkId=(\d+)', td[0].find('a').get('href')).group(1))
         })
-    title = bs.select('.head-title')[0].get_text()
+    title = bs.find('div', class_='head-title').get_text()
     rs = bs.find(id='studentId')
-    sid = int(rs.get('value')) if rs else None
+    sid = None if not rs else int(rs.get('value'))
     return homework, title, int(page), sid
 
 
@@ -81,15 +78,13 @@ def get_details(cookie, cid, hid):
     url = host + '/course/S_oneHomework.html?courseId={}&homeworkId={}'.format(cid, hid)
     resp = requests.get(url, headers=headers, cookies={'JSESSIONID': cookie})
     bs = BeautifulSoup(resp.text, 'lxml')
-    content = bs.select('.notice_content')[0].prettify()
+    content = bs.find('div', class_='notice_content').prettify()
     titles = bs.select('.cont > div > p > span')
     links = bs.select('.cont > div > a')
-    attach = []
-    for title, link in zip(titles, links):
-        attach.append({
-            'title': title.get('title'),
-            'lid': re.search(r'homeworkLinkId=(\d+)', link.get('href')).group(1)
-        })
+    attach = [{
+                  'title': title.get('title'),
+                  'lid': re.search(r'homeworkLinkId=(\d+)', link.get('href')).group(1)
+              } for title, link in zip(titles, links)]
     return content, attach
 
 
@@ -106,9 +101,7 @@ def upload_homework(cookie, cid, sid, hid, file, filename):
         'Upload': (None, 'Submit Query')
     }
     resp = requests.post(url, headers=headers, files=files, cookies={'JSESSIONID': cookie})
-    if 'homework' in resp.text:
-        return True
-    return False
+    return True if 'homework' in resp.text else False
 
 
 def download_url(cookies, url):

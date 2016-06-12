@@ -32,7 +32,7 @@ def get_info(cookie):
     url = base_url + '/info.action'
     resp = requests.get(url, headers=headers, cookies={'JSESSIONID': cookie})
     bs = BeautifulSoup(resp.text, 'lxml')
-    rs = bs.select('h6')
+    rs = bs.find_all('h6')
     info = {
         'name': rs[0].get_text().split(':')[-1],
         'identifier': rs[1].get_text().split(':')[-1],
