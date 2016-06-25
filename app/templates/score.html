@@ -37,7 +37,7 @@
                         {% endfor %}
                     </select>
                     <div class="input-group-btn">
-                        <button id="btn-score" class="btn btn-default" type="button">Go</button>
+                        <button class="btn btn-default" type="button" onclick="get_score()">Go</button>
                     </div>
                 </div>
             </div>
@@ -70,24 +70,6 @@
         </div>
     </div>
 </div>
-<script>
-    $(document).ready(function() {
-        $('#btn-score').click(function() {
-            var arr = $('#opt-score').val().split('&')
-            $.post("{{ url_for('.get') }}",
-            {
-                'year': arr[0],
-                'term': arr[1]
-            },
-            function(data, status) {
-                $('#content-score').html(data.body);
-                $("#statistics-score").html(data.statistics);
-                $('#success-alert').fadeIn();
-                setTimeout("$('#success-alert').fadeOut()", 1800);
-            },
-            "json");
-        });
-    })
-</script>
+<script src="{{ url_for('static', filename='js/score.js') }}"></script>
 {% endblock %}
 

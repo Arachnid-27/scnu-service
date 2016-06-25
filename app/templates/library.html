@@ -52,24 +52,5 @@
         </tbody>
     </table>
 </div>
-<script>
-    function renew(barcode) {
-        $.get("{{ url_for('.renew') }}",
-        {
-            'barcode': barcode
-        },
-        function (data, status) {
-            if (data.success == true) {
-                $('#success-alert').fadeIn();
-                setTimeout("$('#success-alert').fadeOut()", 1000);
-                setTimeout('location.reload()', 1200);
-            } else {
-                $('#fail-alert').html('<strong>续借失败！</strong>' + data.msg)
-                $('#fail-alert').fadeIn();
-                setTimeout("$('#fail-alert').fadeOut()", 1000);
-            }
-        },
-        'json');
-    }
-</script>
+<script src="{{ url_for('static', filename='js/library.js') }}"></script>
 {% endblock %}

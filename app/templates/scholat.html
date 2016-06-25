@@ -29,7 +29,7 @@
         <!-- 右侧课程信息栏-->
         <div class="col-md-9">
             {% if info.title %}
-            <h1>{{ info.title }}<!--  <small id="course_teacher" style="padding-left: 20px;"></small>  --></h1>
+            <h1>{{ info.title }}<small style="padding-left: 20px;">{{ info.teacher }}</small></h1>
             {% else %}
             <h1>未选择课程</h1>
             {% endif %}
@@ -195,32 +195,7 @@ $(document).ready(function() {
         }
     });
 });
-
-// 显示上传模态框
-function upload(hid) {
-    $('#upload-hid').val(hid);
-    $('#homework-upload').modal({
-        backdrop: 'static',
-        keyboard: false
-    });
-}
-
-// 显示作业详情
-function details(cid, hid) {
-    $.get('{{ url_for('.details') }}',
-    {
-        'cid': cid,
-        'hid': hid
-    },
-    function(data, status) {
-        $('#details-body').html(data.content);
-        if (data.footer) {
-            $('#details-footer').html(data.footer);
-        }
-        $('#homework-details').modal('show');
-    },
-    'json');
-}
 </script>
+<script src="{{ url_for('static', filename='js/scholat.js') }}"></script>
 {% endif %}
 {% endblock %}

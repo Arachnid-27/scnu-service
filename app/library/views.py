@@ -1,8 +1,7 @@
-from flask import render_template, request, redirect, url_for, g, make_response
+from flask import render_template, request, redirect, url_for, g, make_response, jsonify
 from .. import rdb
 from ..utils import hmget_decode
 from . import library, function
-import json
 
 
 @library.before_request
@@ -33,6 +32,8 @@ def login():
         return render_template('login.html', entry='图书馆')
     username = request.form['username']
     password = request.form['password']
+    if not username.strip() or not password.strip():
+        return render_template('login.html', entry='图书馆', msg='帐号/密码为空')
     msg, cookie = function.login(username, password)
     if not cookie:
         return render_template('login.html', entry='图书馆', msg=msg)
@@ -45,11 +46,11 @@ def login():
 def renew():
     barcode = request.args.get('barcode', None)
     if not barcode:
-        return json.dumps({'success': False, 'msg': '条形码不能为空'})
+        return jsonify({'success': False, 'msg': '条形码不能为空'})
     msg = function.renew(g.cookie, barcode)
     if '成功' in msg:
-        return json.dumps({'success': True})
-    return json.dumps({'success': False, 'msg': msg})
+        return jsonify({'success': True})
+    return jsonify({'success': False, 'msg': msg})
 
 
 @library.route('/logout')

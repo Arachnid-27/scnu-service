@@ -4,12 +4,12 @@ from ..utils import hmget_decode
 import requests
 import re
 
-base_url = 'http://jwc.scnu.edu.cn/'
+host = 'http://jwc.scnu.edu.cn'
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
                   'Chrome/50.0.2661.86 Safari/537.36',
-    'Referer': base_url
+    'Referer': host
 }
 
 score_view = 'dDw2NDI3MTcwOTk7dDxwPGw8U29ydEV4cHJlcztzZmRjYms7ZGczO2R5YnlzY2o7U29ydERpcmU7eGg7c3RyX3RhYl9' \
@@ -54,14 +54,14 @@ score_view = 'dDw2NDI3MTcwOTk7dDxwPGw8U29ydEV4cHJlcztzZmRjYms7ZGczO2R5YnlzY2o7U2
 
 
 def get_code():
-    url = base_url + 'CheckCode.aspx'
+    url = host + '/CheckCode.aspx'
     resp = requests.get(url, headers=headers)
     cookie = resp.cookies.get('ASP.NET_SessionId')
     return resp.content, cookie
 
 
 def login(username, password, code, cookie):
-    url = base_url + 'default2.aspx'
+    url = host + '/default2.aspx'
     form = {
         '__VIEWSTATE': 'dDwyODE2NTM0OTg7Oz4W5FwUsee1KqGNW4fFCJkBIcFXCQ==',
         'txtUserName': username,
@@ -75,9 +75,9 @@ def login(username, password, code, cookie):
     }
     resp = requests.post(url, headers=headers, data=form, cookies={'ASP.NET_SessionId': cookie})
     bs = BeautifulSoup(resp.text, 'lxml')
-    alert = re.search(r"alert\('(.*?)'\)", bs.select('script[defer]')[0].get_text())
+    alert = bs.select('script[defer]')
     if alert:
-        return alert.group(1)
+        return re.search(r"alert\('(.*?)'\)", alert[0].get_text()).group(1)
     href = bs.select('#headDiv > ul > li:nth-of-type(2) > ul > li:nth-of-type(1) > a')[0].get('href')
     rs = re.split(r'=|&', href)
     rdb.hmset('jwc:' + cookie, {'xh': rs[1], 'xm': rs[3]})
@@ -85,9 +85,9 @@ def login(username, password, code, cookie):
     return None
 
 
-def init_schedule(cookie, name):
-    xh, xm = hmget_decode(rdb, name, ['xh', 'xm'])
-    url = base_url + 'xskbcx.aspx?xh=' + xh + '&xm=' + xm + '&gnmkdm=N121603'
+def init_schedule(cookie):
+    xh, xm = hmget_decode(rdb, 'jwc:' + cookie, ['xh', 'xm'])
+    url = host + '/xskbcx.aspx?xh=' + xh + '&xm=' + xm + '&gnmkdm=N121603'
     resp = requests.get(url, headers=headers, cookies={'ASP.NET_SessionId': cookie})
     bs = BeautifulSoup(resp.text, 'lxml')
     xnd, xqd = bs.select('#xnd')[0], bs.select('#xqd')[0]
@@ -96,7 +96,7 @@ def init_schedule(cookie, name):
     table = re.sub(r'<table.*?>', '<table id="Table" class="table table-bordered">', bs.find(id='Table1').prettify())
     selected_year = xnd.select('option[selected]')[0].get('value')
     selected_term = xqd.select('option[selected]')[0].get('value')
-    rdb.hmset(name, {
+    rdb.hmset('jwc:' + cookie, {
         'years': years,
         'terms': terms,
         'selected_year': selected_year,
@@ -107,9 +107,9 @@ def init_schedule(cookie, name):
     return years, terms, selected_year, selected_term, table
 
 
-def get_schedule(cookie, name, year, term):
-    view, xh, xm = hmget_decode(rdb, name, ['view', 'xh', 'xm'])
-    url = base_url + 'xskbcx.aspx?xh=' + xh + '&xm=' + xm + '&gnmkdm=N121603'
+def get_schedule(cookie, year, term):
+    view, xh, xm = hmget_decode(rdb, 'jwc:' + cookie, ['view', 'xh', 'xm'])
+    url = host + '/xskbcx.aspx?xh=' + xh + '&xm=' + xm + '&gnmkdm=N121603'
     form = {
         '__EVENTTARGET': '',
         '__EVENTARGUMENT': '',
@@ -120,7 +120,7 @@ def get_schedule(cookie, name, year, term):
     resp = requests.post(url, headers=headers, data=form, cookies={'ASP.NET_SessionId': cookie})
     bs = BeautifulSoup(resp.text, 'lxml')
     table = re.sub(r'<table.*?>', '<table id="Table" class="table table-bordered">', bs.find(id='Table1').prettify())
-    rdb.hmset(name, {
+    rdb.hmset('jwc:' + cookie, {
         'selected_year': year,
         'selected_term': term,
         'table': table,
@@ -129,9 +129,9 @@ def get_schedule(cookie, name, year, term):
     return table
 
 
-def get_score(cookie, name, year, term):
-    xh, xm = hmget_decode(rdb, name, ['xh', 'xm'])
-    url = base_url + 'xscjcx.aspx?xh={}&xm={}&gnmkdm=N121605'.format(xh, xm)
+def get_score(cookie, year, term):
+    xh, xm = hmget_decode(rdb, 'jwc:' + cookie, ['xh', 'xm'])
+    url = host + '/xscjcx.aspx?xh={}&xm={}&gnmkdm=N121605'.format(xh, xm)
     score = []
     form = {
         '__EVENTTARGET': '',
@@ -145,15 +145,16 @@ def get_score(cookie, name, year, term):
     }
     resp = requests.post(url, headers=headers, data=form, cookies={'ASP.NET_SessionId': cookie})
     bs = BeautifulSoup(resp.text, 'lxml')
-    items = bs.select('#Datagrid1 > tr')
+    items = bs.find(id='Datagrid1')('tr')
     for item in items[1:]:
+        td = item('td')
         score.append({
-            'name': item.select('td:nth-of-type(4)')[0].get_text().strip(),
-            'credit': item.select('td:nth-of-type(7)')[0].get_text().strip(),
-            'gpa': item.select('td:nth-of-type(8)')[0].get_text().strip(),
-            'performance': item.select('td:nth-of-type(9)')[0].get_text().strip(),
-            'exam': item.select('td:nth-of-type(11)')[0].get_text().strip(),
-            'total': item.select('td:nth-of-type(13)')[0].get_text().strip()
+            'name': td[3].get_text(strip=True),
+            'credit': td[6].get_text(strip=True),
+            'gpa': td[7].get_text(strip=True),
+            'usual': td[8].get_text(strip=True),
+            'exam': td[10].get_text(strip=True),
+            'total': td[12].get_text(strip=True),
         })
     return score
 

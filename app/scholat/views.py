@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, g, make_response, abort
+from flask import render_template, request, redirect, url_for, g, make_response, abort, jsonify
 from .. import rdb
 from ..utils import hget_decode
 from . import scholat, function
@@ -11,13 +11,14 @@ def before_request():
         if 'SCHCOOKIE' not in request.cookies or not rdb.exists('sch:' + request.cookies['SCHCOOKIE']):
             return redirect(url_for('.login'))
         g.cookie = request.cookies['SCHCOOKIE']
+        g.name = 'sch:' + g.cookie
 
 
 @scholat.route('/')
 def index():
-    courses = hget_decode(rdb, 'sch:' + g.cookie, 'courses')
+    courses = hget_decode(rdb, g.name, 'courses')
     if not courses:
-        courses = function.get_list(g.cookie)
+        courses = function.get_courses(g.cookie)
     else:
         courses = json.loads(courses)
     return render_template('scholat.html', courses=courses, info=None)
@@ -26,19 +27,18 @@ def index():
 @scholat.route('/course/<int:cid>')
 @scholat.route('/course/<int:cid>/<int:cur>')
 def course(cid, cur=1):
-    courses = hget_decode(rdb, 'sch:' + g.cookie, 'courses')
+    courses = hget_decode(rdb, g.name, 'courses')
     if not courses:
-        courses = function.get_list(g.cookie)
+        courses = function.get_courses(g.cookie)
     else:
         courses = json.loads(courses)
-    items, title, page, sid = function.get_homework(g.cookie, cid, cur)
-    info = {
-        'title': title,
-        'page': page,
-        'cid': cid,
-        'sid': sid,
-        'cur': cur
-    }
+    info = hget_decode(rdb, g.name, 'info:' + str(cid))
+    if not info:
+        info = function.get_info(g.cookie, cid)
+    else:
+        info = json.loads(info)
+    items, info['page'], info['sid'] = function.get_homework(g.cookie, cid, cur)
+    info['cid'], info['cur'] = cid, cur
     return render_template('scholat.html', courses=courses, homework=items, info=info)
 
 
@@ -50,6 +50,8 @@ def login():
         return render_template('login.html', entry='学者网')
     username = request.form['username']
     password = request.form['password']
+    if not username.strip() or not password.strip():
+        return render_template('login.html', entry='学者网', msg='帐号/密码为空')
     msg, cookie = function.login(username, password)
     if not cookie:
         return render_template('login.html', entry='学者网', msg=msg)
@@ -60,7 +62,7 @@ def login():
 
 @scholat.route('/logout')
 def logout():
-    rdb.delete('sch:' + g.cookie)
+    rdb.delete(g.name)
     return redirect(url_for('.login'))
 
 
@@ -69,7 +71,7 @@ def homework():
     cid = request.args.get('cid', None)
     sid = request.args.get('sid', None)
     hid = request.args.get('hid', None)
-    if None in (cid, sid, hid):
+    if not cid or not sid or not hid:
         abort(404)
     content, hdr = function.download_homework(g.cookie, cid, sid, hid)
     if not content:
@@ -85,15 +87,16 @@ def homework():
 def details():
     cid = request.args.get('cid', None)
     hid = request.args.get('hid', None)
-    if None in (cid, hid):
+    if not cid or not hid:
         abort(404)
     content, items = function.get_details(g.cookie, cid, hid)
     if not content:
         abort(404)
-    footer = ''
-    for item in items:
-        footer += '<p><a href="{}">{}</a></p>'.format(url_for('.attach', cid=cid, lid=item['lid']), item['title'])
-    return json.dumps({
+    footer = [{
+        'url': url_for('.attach', cid=cid, lid=item['lid']),
+        'title': item['title']
+    } for item in items]
+    return jsonify({
         'content': content,
         'footer': footer
     })
@@ -103,7 +106,7 @@ def details():
 def attach():
     cid = request.args.get('cid', None)
     lid = request.args.get('lid', None)
-    if None in (cid, lid):
+    if not cid or not lid:
         abort(404)
     content, hdr = function.download_attach(g.cookie, cid, lid)
     if not content:

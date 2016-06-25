@@ -35,7 +35,7 @@
                     {% endfor %}
                     </select>
                     <div class="input-group-btn">
-                        <button id="btn-schedule" class="btn btn-default" type="button">Go</button>
+                        <button class="btn btn-default" type="button" onclick="load_schedule()">Go</button>
                     </div>
                 </div>
             </div>
@@ -62,7 +62,7 @@
                         {% endfor %}
                     </select>
                     <div class="input-group-btn">
-                        <button id="btn-score" class="btn btn-default" type="button">Go</button>
+                        <button class="btn btn-default" type="button" onclick="load_score()">Go</button>
                     </div>
                 </div>
             </div>
@@ -89,7 +89,7 @@
                     <div class="panel-heading">
                         <h3 class="panel-title">成绩统计</h3>
                     </div>
-                    <div id="statistics-score" class="panel-body">
+                    <div id="info-score" class="panel-body">
                     </div>
                 </div>
             </div>
@@ -99,43 +99,7 @@
 <script>
     var selected_year = "{{ selected_year }}";
     var selected_term = "{{ selected_term }}";
-    $(document).ready(function() {
-        // 加载课程表
-        $("#btn-schedule").click(function() {
-            var year = $("#year-schedule").val();
-            var term = $("#term-schedule").val();
-            if (selected_year !=  year || selected_term != term) {
-                $.post("{{ url_for('jwc.schedule') }}",
-                {
-                    'year': year,
-                    'term': term
-                },
-                function(data, status) {
-                    $("#content-schedule").html(data);
-                    $("#success-alert").fadeIn();
-                });
-                setTimeout('$("#success-alert").fadeOut()', 1800);
-                selected_year = year;
-                selected_term = term;
-            }
-
-        });
-        // 加载成绩
-        $("#btn-score").click(function() {
-            $.post("{{ url_for('jwc.score') }}",
-            {
-                'year': $("#year-score").val(),
-                'term': $("#term-score").val()
-            },
-            function(data, status) {
-                $("#content-score").html(data.body);
-                $("#statistics-score").html(data.statistics);
-                $("#success-alert").fadeIn();
-            },
-            "json");
-            setTimeout('$("#success-alert").fadeOut()', 1800);
-        });
-    })
 </script>
+<script src="{{ url_for('static', filename='js/jwc.js') }}"></script>
 {% endblock %}
 

@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, g, make_response
+from flask import render_template, request, redirect, url_for, g, make_response, jsonify
 from .. import rdb
 from ..utils import hmget_decode
 from . import score, function
@@ -11,12 +11,12 @@ def before_request():
         if 'SCOCOOKIE' not in request.cookies or not rdb.exists('sco:' + request.cookies['SCOCOOKIE']):
             return redirect(url_for('.login'))
         g.cookie = request.cookies['SCOCOOKIE']
+        g.name = 'sco:' + g.cookie
 
 
 @score.route('/')
 def index():
-    keys = ['info', 'terms']
-    info, terms = hmget_decode(rdb, 'sco:' + g.cookie, keys)
+    info, terms = hmget_decode(rdb, g.name, ['info', 'terms'])
     return render_template('score.html', info=json.loads(info), terms=json.loads(terms))
 
 
@@ -30,6 +30,8 @@ def login():
         username = request.form['username']
         password = request.form['password']
         code = request.form['code']
+        if not username.strip() or not password.strip() or not code.strip():
+            return render_template('login.html', entry='校园网', msg='帐号/密码/验证码为空')
         cookie = request.cookies.get('SCOCOOKIE')
         if not function.check(cookie, code):
             return render_template('login.html', entry='校园网', msg='验证码错误')
@@ -55,22 +57,13 @@ def get():
     year = request.form['year']
     term = request.form['term']
     info, items = function.get_score(g.cookie, year, term)
-    body, statistics = '', ''
-    if items:
-        for item in items:
-            body += '<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>'.format(
-                item['name'], item['credit'], item['usual'], item['final'], item['total']
-            )
-        statistics = '<p>绩点： {}</p><p>共修科目数： {}</p><p>未通过科目数： {}</p>'.format(
-            info['points'], info['all'], info['unpass']
-        )
-    return json.dumps({
-        'body': body,
-        'statistics': statistics
+    return jsonify({
+        'info': info,
+        'items': items
     })
 
 
 @score.route('/logout')
 def logout():
-    rdb.delete('sco:' + g.cookie)
+    rdb.delete(g.name)
     return redirect(url_for('.login'))

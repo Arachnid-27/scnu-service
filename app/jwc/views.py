@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, g, make_response
+from flask import render_template, request, redirect, url_for, g, make_response, jsonify
 from .. import rdb
 from ..utils import hmget_decode
 from . import jwc, function
@@ -10,8 +10,8 @@ def before_request():
     if request.endpoint not in ['jwc.login', 'jwc.verify']:
         if 'JWCCOOKIE' not in request.cookies or not rdb.exists('jwc:' + request.cookies['JWCCOOKIE']):
             return redirect(url_for('.login'))
-        g.name = 'jwc:' + request.cookies['JWCCOOKIE']
         g.cookie = request.cookies['JWCCOOKIE']
+        g.name = 'jwc:' + g.cookie
 
 
 @jwc.route('/')
@@ -19,7 +19,7 @@ def index():
     years, terms, selected_year, selected_term, table = hmget_decode(
         rdb, g.name, ['years', 'terms', 'selected_year', 'selected_term', 'table'])
     if None in (years, terms, selected_year, selected_term, table):
-        years, terms, selected_year, selected_term, table = function.init_schedule(g.cookie, g.name)
+        years, terms, selected_year, selected_term, table = function.init_schedule(g.cookie)
     return render_template('jwc.html', table=table, years=years.split(','), terms=terms.split(','),
                            selected_year=selected_year, selected_term=selected_term)
 
@@ -34,6 +34,8 @@ def login():
         username = request.form['username']
         password = request.form['password']
         code = request.form['code']
+        if not username.strip() or not password.strip() or not code.strip():
+            return render_template('login.html', entry='教务处', msg='帐号/密码/验证码为空')
         cookie = request.cookies.get('JWCCOOKIE')
         msg = function.login(username, password, code, cookie)
         if msg:
@@ -54,23 +56,23 @@ def verify():
 def score():
     year = request.form['year']
     term = request.form['term']
-    items = function.get_score(g.cookie, g.name, year, term)
-    body, statistics = '', ''
+    items = function.get_score(g.cookie, year, term)
+    total, gpa, credit = [], [], []
+    for item in items:
+        total.append(int(item['total']))
+        gpa.append(float(item['gpa']))
+        credit.append(float(item['credit']))
+    info = None
     if items:
-        total, gpa, credit = [], [], []
-        for item in items:
-            body += '<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>'.format(
-                item['name'], item['credit'], item['gpa'], item['performance'], item['exam'], item['total']
-            )
-            total.append(int(item['total']))
-            gpa.append(float(item['gpa']))
-            credit.append(float(item['credit']))
-        statistics = '<p>总学分： {0}</p><p>最高分数： {1}</p><p>最低分数： {2}</p><p>平均绩点： {3: .2f}</p>'.format(
-            sum(credit), max(total), min(total), sum([c * p for c, p in zip(credit, gpa)]) / sum(credit)
-        )
-    return json.dumps({
-        'body': body,
-        'statistics': statistics
+        info = {
+            'sum': sum(credit),
+            'max': max(total),
+            'min': min(total),
+            'ave': round(sum([c * p for c, p in zip(credit, gpa)]) / sum(credit), 2)
+        }
+    return jsonify({
+        'items': items,
+        'info': info
     })
 
 
@@ -78,5 +80,7 @@ def score():
 def schedule():
     year = request.form['year']
     term = request.form['term']
-    table = function.get_schedule(g.cookie, g.name, year, term)
-    return table
+    table = function.get_schedule(g.cookie, year, term)
+    return jsonify({
+        'table': table
+    })

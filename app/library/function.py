@@ -32,7 +32,7 @@ def get_info(cookie):
     url = base_url + '/info.action'
     resp = requests.get(url, headers=headers, cookies={'JSESSIONID': cookie})
     bs = BeautifulSoup(resp.text, 'lxml')
-    rs = bs.find_all('h6')
+    rs = bs('h6')
     info = {
         'name': rs[0].get_text().split(':')[-1],
         'identifier': rs[1].get_text().split(':')[-1],
@@ -50,13 +50,13 @@ def get_books(cookie):
     bs = BeautifulSoup(resp.text, 'lxml')
     items = bs.select('#lend_list > li')
     for item in items[1:]:
-        rs = re.search('^\d+\.(.*)/(.*?)[编著]', item.select('a > h3')[0].get_text().strip())
+        rs = re.search('^\d+\.(.*)/(.*?)[编著]', item.select('a > h3')[0].get_text(strip=True))
         books.append({
             'title': rs.group(1),
             'author': rs.group(2),
-            'borrow': item.select('a > p:nth-of-type(1)')[0].get_text().strip().split(':')[1],
-            'return': item.select('a > p:nth-of-type(2)')[0].get_text().strip().split(':')[1],
-            'place': item.select('a > p:nth-of-type(3)')[0].get_text().strip().split(':')[1],
+            'borrow': item.select('a > p:nth-of-type(1)')[0].get_text(strip=True).split(':')[1],
+            'return': item.select('a > p:nth-of-type(2)')[0].get_text(strip=True).split(':')[1],
+            'place': item.select('a > p:nth-of-type(3)')[0].get_text(strip=True).split(':')[1],
             'barcode': item.select('input[onclick]')[0].get('onclick').split("'")[-2]
         })
     return books

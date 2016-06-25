@@ -15,7 +15,7 @@
             <label>密码</label>
             <input type="password" class="form-control" name="password" placeholder="输入密码">
         </div>
-        {% if entry == '校园网' %}
+        {% if entry == '校园网' or entry == '教务处' %}
         <div class="form-group">
             <label>验证码</label>
             <div class="input-group">
@@ -28,13 +28,17 @@
         {% endif %}
         <br />
         <button id="btn-login" class="btn btn-primary btn-block" type="submit">登录</button>
-        {% if entry == '校园网' %}
+        {% if entry == '校园网' or entry == '教务处' %}
         <script>
             $(document).ready(function() {
                 $("#btn-code").popover({
                     html : true,
                     placement : 'right',
+                    {% if entry == '校园网' %}
                     content : '<img src="{{ url_for('score.verify') }}" />'
+                    {% else %}
+                    content : '<img src="{{ url_for('jwc.verify') }}" />'
+                    {% endif %}
                 });
             })
         </script>
