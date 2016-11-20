@@ -10,7 +10,7 @@ def index():
 
 @main.app_template_filter('ellipsis')
 def filter_ellipsis(s):
-    return s[:30] + '..' if len(s) > 30 else s
+    return s[:35] + '..' if len(s) > 35 else s
 
 
 @main.route('/account')

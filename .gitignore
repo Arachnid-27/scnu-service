@@ -8,3 +8,6 @@ venv/
 
 # idea
 .idea/
+
+# vim swap
+*.swp

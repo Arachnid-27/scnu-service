@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% block body %}
+<script>var renew_verify_url = '{{ url_for('library.renew_verify') }}';</script>
 <div id="success-alert" class="alert alert-success alert-hidden"><strong>续借成功！</strong></div>
 <div id="fail-alert" class="alert alert-danger alert-hidden"></div>
 <div class="container" style="padding-top: 40px">
@@ -17,10 +18,12 @@
     <table class="table table-striped">
         <thead>
             <tr>
+                <th>条码号</th>
                 <th>题名</th>
                 <th>责任者</th>
                 <th>借阅日期</th>
                 <th>应还日期</th>
+                <th>续借量</th>
                 <th>藏馆地</th>
                 <th>操作</th>
             </tr>
@@ -28,14 +31,15 @@
         <tbody>
             {% for book in books %}
             <tr>
-                <td>{{ book.title }}</td>
+                <td>{{ book.barcode }}</td>
+                <td>{{ book.title | ellipsis }}</td>
                 <td>{{ book.author }}</td>
                 <td>{{ book.borrow }}</td>
                 <td>{{ book.return }}</td>
+                <td>{{ book.renew }}</td>
                 <td>{{ book.place }}</td>
                 <td>
-                    <button type="button" class="btn btn-default btn-xs"
-                            onclick="renew('{{ book.barcode }}')">
+                    <button type="button" class="btn btn-default btn-xs" onclick="show_verify('{{ book.barcode }}', '{{ book.check }}')">
                         <span class="glyphicon glyphicon-send"></span> 续借
                     </button>
                 </td>
@@ -52,5 +56,32 @@
         </tbody>
     </table>
 </div>
+<!-- 续借验证模态框 -->
+<div class="modal fade" id="renew-verify" tabindex="-1">
+    <div class="modal-dialog modal-sm" >
+        <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+                    <h4>请输入验证码</h4>
+                </div>
+                <div class="modal-body">
+                    <input id="barcode" name="barcode" type="hidden">
+                    <div class="input-group">
+                        <input id="renew-input-code" type="text" class="form-control">
+                        <span id="renew-get-code-group" class="input-group-btn">
+                        </span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="renew-commit" class="btn btn-primary" onclick="renew()">续借</button>
+                </div>
+        </div>
+    </div>
+</div>
 <script src="{{ url_for('static', filename='js/library.js') }}"></script>
+<script>
+$(document).ready(function() {
+    fresh_popover();
+})
+</script>
 {% endblock %}

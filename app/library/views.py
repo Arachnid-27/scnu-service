@@ -6,7 +6,7 @@ from . import library, function
 
 @library.before_request
 def before_request():
-    if not request.endpoint == 'library.login':
+    if  request.endpoint not in ['library.login', 'library.verify']:
         if 'LIBCOOKIE' not in request.cookies or not rdb.exists('lib:' + request.cookies['LIBCOOKIE']):
             return redirect(url_for('.login'))
         g.cookie = request.cookies['LIBCOOKIE']
@@ -32,22 +32,44 @@ def login():
         return render_template('login.html', entry='图书馆')
     username = request.form['username']
     password = request.form['password']
-    if not username.strip() or not password.strip():
-        return render_template('login.html', entry='图书馆', msg='帐号/密码为空')
-    msg, cookie = function.login(username, password)
-    if not cookie:
+    code = request.form['code']
+    if not username.strip() or not password.strip() or not code.strip():
+        return render_template('login.html', entry='图书馆', msg='帐号/密码/验证码为空')
+    cookie = request.cookies.get('LIBCOOKIE')
+    msg = function.login(cookie, username, password, code)
+    if msg != '登录成功':
         return render_template('login.html', entry='图书馆', msg=msg)
     resp = make_response(redirect(url_for('.index')))
+    return resp
+
+
+@library.route('/code')
+def verify():
+    content, cookie = function.get_code()
+    resp = make_response(content)
     resp.set_cookie('LIBCOOKIE', cookie)
+    resp.mimetype = 'image/jpeg'
+    return resp
+
+
+@library.route('/renew_code')
+def renew_verify():
+    content = function.get_renew_code(g.cookie)
+    resp = make_response(content)
+    resp.mimetype = 'image/jpeg'
     return resp
 
 
 @library.route('/renew')
 def renew():
     barcode = request.args.get('barcode', None)
-    if not barcode:
-        return jsonify({'success': False, 'msg': '条形码不能为空'})
-    msg = function.renew(g.cookie, barcode)
+    code = request.args.get('code', None)
+    check = request.args.get('check', None)
+    if not code:
+        return jsonify({'success': False, 'msg': '验证码不能为空'})
+    elif not barcode or not check:
+        return jsonify({'success': False, 'msg': '未知错误'})
+    msg = function.renew(g.cookie, barcode, code, check)
     if '成功' in msg:
         return jsonify({'success': True})
     return jsonify({'success': False, 'msg': msg})
