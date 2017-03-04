@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 from .. import rdb
-from ..utils import hmget_decode
+from ..utils import hmget_decode, hget_decode
 import requests
 import re
 
@@ -12,47 +12,6 @@ headers = {
     'Referer': host
 }
 
-score_view = 'dDw2NDI3MTcwOTk7dDxwPGw8U29ydEV4cHJlcztzZmRjYms7ZGczO2R5YnlzY2o7U29ydERpcmU7eGg7c3RyX3RhYl9' \
-             'iamc7Y2pjeF9sc2I7enhjamN4eHM7PjtsPGtjbWM7XGU7YmpnO1xlO2FzYzsyMDE0MjAwNTAyNzt6Zl9jeGNqdGpfMj' \
-             'AxNDIwMDUwMjc7OzA7Pj47bDxpPDE+Oz47bDx0PDtsPGk8ND47aTwxMD47aTwxOT47aTwyND47aTwzMj47aTwzND47a' \
-             'TwzNj47aTwzOD47aTw0MD47aTw0Mj47aTw0ND47aTw0Nj47aTw0OD47aTw1Mj47aTw1ND47aTw1Nj47PjtsPHQ8dDxw' \
-             'PHA8bDxEYXRhVGV4dEZpZWxkO0RhdGFWYWx1ZUZpZWxkOz47bDxYTjtYTjs+Pjs+O3Q8aTwzPjtAPFxlOzIwMTUtMjA' \
-             'xNjsyMDE0LTIwMTU7PjtAPFxlOzIwMTUtMjAxNjsyMDE0LTIwMTU7Pj47Pjs7Pjt0PHQ8cDxwPGw8RGF0YVRleHRGaW' \
-             'VsZDtEYXRhVmFsdWVGaWVsZDs+O2w8a2N4em1jO2tjeHpkbTs+Pjs+O3Q8aTw5PjtAPOW/heS/ruivvjvpgInkv67or' \
-             '7476ZmQ6YCJ6K++O+S7u+mAieivvjvlhazpgInor7475a6e6Le15pWZ5a2mO+i+heS/ruivvjvlm73lpJbkuqTmjaLo' \
-             'r77nqIs7XGU7PjtAPDAxOzAyOzAzOzA0OzA1OzA2OzA3OzE3O1xlOz4+Oz47Oz47dDxwPHA8bDxWaXNpYmxlOz47bDx' \
-             'vPGY+Oz4+Oz47Oz47dDxwPHA8bDxWaXNpYmxlOz47bDxvPGY+Oz4+Oz47Oz47dDxwPHA8bDxWaXNpYmxlOz47bDxvPG' \
-             'Y+Oz4+Oz47Oz47dDxwPHA8bDxUZXh0Oz47bDxcZTs+Pjs+Ozs+O3Q8cDxwPGw8VGV4dDtWaXNpYmxlOz47bDzlrablj' \
-             '7fvvJoyMDE0MjAwNTAyNztvPHQ+Oz4+Oz47Oz47dDxwPHA8bDxUZXh0O1Zpc2libGU7PjtsPOWnk+WQje+8muWQtOWu' \
-             'j+WFtDtvPHQ+Oz4+Oz47Oz47dDxwPHA8bDxUZXh0O1Zpc2libGU7PjtsPOWtpumZou+8mui9r+S7tuWtpumZojtvPHQ' \
-             '+Oz4+Oz47Oz47dDxwPHA8bDxUZXh0O1Zpc2libGU7PjtsPOS4k+S4mu+8mjtvPHQ+Oz4+Oz47Oz47dDxwPHA8bDxUZX' \
-             'h0O1Zpc2libGU7PjtsPOi9r+S7tuW3peeoiztvPHQ+Oz4+Oz47Oz47dDxwPHA8bDxUZXh0Oz47bDzkuJPkuJrmlrnlk' \
-             'JE6Oz4+Oz47Oz47dDxwPHA8bDxUZXh0O1Zpc2libGU7PjtsPOihjOaUv+ePre+8mjE06L2v5Lu25bel56iLMeePrTtv' \
-             'PHQ+Oz4+Oz47Oz47dDxAMDxwPHA8bDxWaXNpYmxlOz47bDxvPGY+Oz4+Oz47Ozs7Ozs7Ozs7Pjs7Pjt0PDtsPGk8MT4' \
-             '7aTwzPjtpPDU+O2k8Nz47aTw5PjtpPDEzPjtpPDE1PjtpPDE5PjtpPDIxPjtpPDIyPjtpPDIzPjtpPDI1PjtpPDI3Pj' \
-             'tpPDI5PjtpPDMxPjtpPDMzPjtpPDQxPjtpPDQ3PjtpPDQ5PjtpPDUwPjs+O2w8dDxwPHA8bDxWaXNpYmxlOz47bDxvP' \
-             'GY+Oz4+Oz47Oz47dDxAMDxwPHA8bDxWaXNpYmxlOz47bDxvPGY+Oz4+O3A8bDxzdHlsZTs+O2w8RElTUExBWTpub25l' \
-             'Oz4+Pjs7Ozs7Ozs7Ozs+Ozs+O3Q8O2w8aTwxMz47PjtsPHQ8QDA8Ozs7Ozs7Ozs7Oz47Oz47Pj47dDxwPHA8bDxUZXh' \
-             '0O1Zpc2libGU7PjtsPOiHs+S7iuacqumAmui/h+ivvueoi+aIkOe7qe+8mjtvPHQ+Oz4+Oz47Oz47dDxAMDxwPHA8bD' \
-             'xQYWdlQ291bnQ7XyFJdGVtQ291bnQ7XyFEYXRhU291cmNlSXRlbUNvdW50O0RhdGFLZXlzOz47bDxpPDE+O2k8MD47a' \
-             'TwwPjtsPD47Pj47cDxsPHN0eWxlOz47bDxESVNQTEFZOmJsb2NrOz4+Pjs7Ozs7Ozs7Ozs+Ozs+O3Q8QDA8cDxwPGw8' \
-             'VmlzaWJsZTs+O2w8bzxmPjs+PjtwPGw8c3R5bGU7PjtsPERJU1BMQVk6bm9uZTs+Pj47Ozs7Ozs7Ozs7Pjs7Pjt0PEA' \
-             'wPHA8cDxsPFZpc2libGU7PjtsPG88Zj47Pj47cDxsPHN0eWxlOz47bDxESVNQTEFZOm5vbmU7Pj4+Ozs7Ozs7Ozs7Oz' \
-             '47Oz47dDxAMDw7Ozs7Ozs7Ozs7Pjs7Pjt0PEAwPHA8cDxsPFZpc2libGU7PjtsPG88Zj47Pj47cDxsPHN0eWxlOz47b' \
-             'DxESVNQTEFZOm5vbmU7Pj4+Ozs7Ozs7Ozs7Oz47Oz47dDxAMDxwPHA8bDxWaXNpYmxlOz47bDxvPGY+Oz4+O3A8bDxz' \
-             'dHlsZTs+O2w8RElTUExBWTpub25lOz4+Pjs7Ozs7Ozs7Ozs+Ozs+O3Q8QDA8cDxwPGw8VmlzaWJsZTs+O2w8bzxmPjs' \
-             '+Pjs+Ozs7Ozs7Ozs7Oz47Oz47dDxAMDxwPHA8bDxWaXNpYmxlOz47bDxvPGY+Oz4+O3A8bDxzdHlsZTs+O2w8RElTUE' \
-             'xBWTpub25lOz4+Pjs7Ozs7Ozs7Ozs+Ozs+O3Q8QDA8cDxwPGw8VmlzaWJsZTs+O2w8bzxmPjs+PjtwPGw8c3R5bGU7P' \
-             'jtsPERJU1BMQVk6bm9uZTs+Pj47Ozs7Ozs7Ozs7Pjs7Pjt0PEAwPDtAMDw7O0AwPHA8bDxIZWFkZXJUZXh0Oz47bDzl' \
-             'iJvmlrDlhoXlrrk7Pj47Ozs7PjtAMDxwPGw8SGVhZGVyVGV4dDs+O2w85Yib5paw5a2m5YiGOz4+Ozs7Oz47QDA8cDx' \
-             'sPEhlYWRlclRleHQ7PjtsPOWIm+aWsOasoeaVsDs+Pjs7Ozs+Ozs7Pjs7Ozs7Ozs7Oz47Oz47dDxwPHA8bDxUZXh0O1' \
-             'Zpc2libGU7PjtsPOacrOS4k+S4muWFsTc45Lq6O288Zj47Pj47Pjs7Pjt0PHA8cDxsPFZpc2libGU7PjtsPG88Zj47P' \
-             'j47Pjs7Pjt0PHA8cDxsPFZpc2libGU7PjtsPG88Zj47Pj47Pjs7Pjt0PHA8cDxsPFZpc2libGU7PjtsPG88Zj47Pj47' \
-             'Pjs7Pjt0PHA8cDxsPFRleHQ7PjtsPFNDTlU7Pj47Pjs7Pjt0PHA8cDxsPEltYWdlVXJsOz47bDwuL2V4Y2VsLzIwMTQ' \
-             'yMDA1MDI3LmpwZzs+Pjs+Ozs+Oz4+O3Q8O2w8aTwzPjs+O2w8dDxAMDw7Ozs7Ozs7Ozs7Pjs7Pjs+Pjs+Pjs+Pjs+U6' \
-             'Rj9ArPkGA3xNS/xAo95A5ZwO4='
-
-
 def get_code():
     url = host + '/CheckCode.aspx'
     resp = requests.get(url, headers=headers)
@@ -63,8 +22,9 @@ def get_code():
 def login(username, password, code, cookie):
     url = host + '/default2.aspx'
     form = {
-        '__VIEWSTATE': 'dDwyODE2NTM0OTg7Oz4W5FwUsee1KqGNW4fFCJkBIcFXCQ==',
+        '__VIEWSTATE': 'dDwtNTE2MjI4MTQ7Oz5O1VSr99LahyNHrIGlotpJ441TCA==',
         'txtUserName': username,
+        'Textbox1': '',
         'TextBox2': password,
         'txtSecretCode': code,
         'RadioButtonList1': '学生',
@@ -76,8 +36,9 @@ def login(username, password, code, cookie):
     resp = requests.post(url, headers=headers, data=form, cookies={'ASP.NET_SessionId': cookie})
     bs = BeautifulSoup(resp.text, 'lxml')
     alert = bs.select('script[defer]')
+    alert = re.search(r"alert\('(.*?)'\)", alert[0].get_text())
     if alert:
-        return re.search(r"alert\('(.*?)'\)", alert[0].get_text()).group(1)
+        return alert.group(1)
     href = bs.select('#headDiv > ul > li:nth-of-type(2) > ul > li:nth-of-type(1) > a')[0].get('href')
     rs = re.split(r'=|&', href)
     rdb.hmset('jwc:' + cookie, {'xh': rs[1], 'xm': rs[3]})
@@ -131,6 +92,9 @@ def get_schedule(cookie, year, term):
 
 def get_score(cookie, year, term):
     xh, xm = hmget_decode(rdb, 'jwc:' + cookie, ['xh', 'xm'])
+    score_view = hget_decode(rdb, 'jwc:' + cookie, 'score_view')
+    if not score_view:
+        score_view = get_score_view(cookie, xh, xm)
     url = host + '/xscjcx.aspx?xh={}&xm={}&gnmkdm=N121605'.format(xh, xm)
     score = []
     form = {
@@ -158,3 +122,10 @@ def get_score(cookie, year, term):
         })
     return score
 
+def get_score_view(cookie, xh, xm):
+    url = host + '/xscjcx.aspx?xh={}&xm={}&gnmkdm=N121605'.format(xh, xm)
+    resp = requests.get(url, headers=headers, cookies={'ASP.NET_SessionId': cookie})
+    bs = BeautifulSoup(resp.text, 'lxml')
+    result = bs.find(id='Form1').select('input')[2]['value']
+    rdb.hset('jwc:' + cookie, 'score_view', result)
+    return result

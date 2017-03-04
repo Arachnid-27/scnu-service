@@ -42,7 +42,7 @@ def login(cookie, username, password, code):
         return None
     terms_data = json.loads(re.search(r'terms_data = (.*?);', resp.text).group(1))
     score_data = json.loads(re.search(r'score_data = (.*?);', resp.text).group(1))
-    cookie = resp.cookies.get('oauthCode')
+    cookie = resp.cookies.get('JSESSIONID')
     terms = [{'year': item['academicYear'], 'term': item['term']} for item in terms_data['data']['terms']]
     rdb.hmset('sco:' + cookie, {
         'info': json.dumps(score_data['data']),
@@ -60,7 +60,7 @@ def auth():
 
 def get_score(cookie, year, term):
     url = 'http://app.scnu.edu.cn/score/term.html?academicYear={}&term={}'.format(year, term)
-    resp = requests.get(url, headers=headers, cookies={'oauthCode': cookie})
+    resp = requests.get(url, headers=headers, cookies={'JSESSIONID': cookie})
     term_data = json.loads(re.search(r'term_data = (.*?);', resp.text).group(1))
     grade = [{
         'name': item.get('lessionName', '-'),
